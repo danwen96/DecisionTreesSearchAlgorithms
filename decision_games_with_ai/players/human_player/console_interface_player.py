@@ -37,8 +37,8 @@ class ConsoleInterfacePlayer(PlayerABC):
         :return: True if move format is valid, false otherwise
         """
         uci_pattern = re.compile('[a-z][0-9]+')
-        match_obj = uci_pattern.match(move_in_uci_str)
-        return match_obj.group() == move_in_uci_str if match_obj else False
+        match_list = uci_pattern.findall(move_in_uci_str)
+        return ''.join(match_list) == move_in_uci_str if match_list else False
 
 
 if __name__ == "__main__":

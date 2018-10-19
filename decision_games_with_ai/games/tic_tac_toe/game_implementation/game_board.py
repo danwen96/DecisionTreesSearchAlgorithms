@@ -1,16 +1,14 @@
 from enum import Enum
 
+from decision_games_with_ai.games.game_board_abc import GameBoardABC
+from decision_games_with_ai.games.utils.events_exceptions import InvalidMoveException
 from decision_games_with_ai.games.utils.coords_formatters import CoordsFormatter
 from decision_games_with_ai.games.utils.game_states_enums import GameStates
 from decision_games_with_ai.games.utils.view_modificators import create_string_board_from_output
 
 
-class GameBoard:
+class GameBoard(GameBoardABC):
     """Stores game board and provides method to manipulate on it"""
-
-    class InvalidMoveException(ValueError):
-        """Type of exception thrown when move that is going to be made is forbidden"""
-        pass
 
     class BoardSigns(Enum):
         """Enum with possible board signs"""
@@ -34,17 +32,17 @@ class GameBoard:
         self.moves_list = []
 
     # @create_string_board_from_output(should_add_indexes=True)
-    def get_board_view(self):
-        """
-        Returns the view of board
-        :return: Lists with the board values
-        """
-        return [list(act_list) for act_list in reversed(self.board_arrays)]
+    # def get_board_view(self):
+    #     """
+    #     Returns the view of board
+    #     :return: Lists with the board values
+    #     """
+    #     return [list(act_list) for act_list in reversed(self.board_arrays)]
 
     def check_game_state(self):
         """
-        Checks is game has ended
-        :return: GameStates state in witch game is now
+        Checks if game has ended
+        :return: GameStates state in which game is now
         """
         wining_lines_list = []
 
@@ -82,7 +80,7 @@ class GameBoard:
         if self.board_arrays[y_ind][x_ind] == GameBoard.BoardSigns.EMPTY.value:
             self.board_arrays[y_ind][x_ind] = player_id.value
         else:
-            raise GameBoard.InvalidMoveException("The chosen field is not empty. Move is invalid.")
+            raise InvalidMoveException("The chosen field is not empty. Move is invalid.")
 
         self.moves_list.append(move_coords)
 
