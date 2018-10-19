@@ -29,9 +29,9 @@ class GameBoardABC(ABC):
         list_of_tuples = [list(row) for row in board_to_copy]
         return list(list_of_tuples)
 
-    @abstractmethod
-    def check_game_state(self):
-        pass
+    # @abstractmethod
+    # def check_game_state(self):
+    #     pass
 
     @abstractmethod
     def make_move(self, player_id, move_coords):

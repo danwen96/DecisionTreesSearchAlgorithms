@@ -7,6 +7,7 @@ from decision_games_with_ai.games.game_board_abc import GameBoardABC
 from decision_games_with_ai.games.utils.coords_formatters import CoordsFormatter
 from decision_games_with_ai.games.utils.events_exceptions import InvalidMoveException, \
     MoveCheckOutsideOfArray
+from decision_games_with_ai.games.utils.game_states_enums import GameStates
 from decision_games_with_ai.games.utils.view_modificators import create_string_board_from_output
 
 
@@ -70,9 +71,9 @@ class GameBoard(GameBoardABC):
 
     pawn_ranges = {
         BoardSigns.PLAYER1_CHECKER: 1,
-        BoardSigns.PLAYER2_CHECKER: 2,
-        BoardSigns.PLAYER1_KING: 1,
-        BoardSigns.PLAYER2_KING: 2
+        BoardSigns.PLAYER2_CHECKER: 1,
+        BoardSigns.PLAYER1_KING: 8,
+        BoardSigns.PLAYER2_KING: 8
     }
 
     pawn_check_backwards = {
@@ -82,8 +83,11 @@ class GameBoard(GameBoardABC):
         BoardSigns.PLAYER2_KING: True
     }
 
+    max_moves_without_capture = 50
+
     def __init__(self):
         self.board_size = 8
+        self.move_count = 0
         self._initialize_board()
 
     def _initialize_board(self):
@@ -97,6 +101,7 @@ class GameBoard(GameBoardABC):
             for y in range(self.board_size)]
 
         self.moves_list = []
+
         self.fill_board_with_starting_positions()
 
     def fill_board_with_starting_positions(self, board_to_fill=None):
@@ -119,13 +124,41 @@ class GameBoard(GameBoardABC):
                 if part_el == self.BoardSigns.EMPTY_BLACK.value:
                     row[i] = self.BoardSigns.PLAYER2_CHECKER.value
 
-    def check_game_state(self):
+    def check_game_state(self, player_id):
         """
-        Checks the state of the game
+        Checks the state of the game for the actual player
         :return: Game state in a form of GameStates enum
         """
-        print("skipping check for win")
-        # raise NotImplementedError("TODO")
+        player1_pawns = self._find_players_pawns(GameBoard.Players.PLAYER1)
+        if not player1_pawns:
+            return GameStates.PLAYER2WIN
+        elif player_id == GameBoard.Players.PLAYER1:
+            for p_x_ind, p_y_ind, p_el in player1_pawns:
+                try:
+                    if self._find_moves_for_pawn(p_x_ind, p_y_ind, player_id):
+                        break
+                except InvalidMoveException:
+                    break
+            else:
+                return GameStates.PLAYER2WIN
+
+        player_2_pawns = self._find_players_pawns(GameBoard.Players.PLAYER2)
+        if not player_2_pawns:
+            return GameStates.PLAYER1WIN
+        elif player_id == GameBoard.Players.PLAYER2:
+            for p_x_ind, p_y_ind, p_el in player_2_pawns:
+                try:
+                    if self._find_moves_for_pawn(p_x_ind, p_y_ind, player_id):
+                        break
+                except InvalidMoveException:
+                    break
+            else:
+                return GameStates.PLAYER1WIN
+
+        if self.move_count == GameBoard.max_moves_without_capture:
+            return GameStates.DRAW
+
+        return GameStates.ONGOING
 
     def make_move(self, player_id, move_coords):
         """
@@ -154,11 +187,14 @@ class GameBoard(GameBoardABC):
         move_done = False
         for mov_ind, pawn_rem_list in possible_moves:
             if (end_x_ind, end_y_ind) == mov_ind:
-                print("move possible")
+                self.move_count += 1
                 self.board_arrays[end_y_ind][end_x_ind] = \
                     self.board_arrays[start_y_ind][start_x_ind]
                 self.board_arrays[start_y_ind][start_x_ind] = GameBoard.BoardSigns.EMPTY_BLACK.value
+                self.__change_checker_to_king_if_can(end_x_ind, end_y_ind)
+
                 for x_rm_ind, y_rm_ind in pawn_rem_list:
+                    self.move_count = 0
                     self.board_arrays = self.get_board_without_pawn(
                         board_to_get=self.board_arrays,
                         rem_pawn_x=x_rm_ind,
@@ -169,20 +205,28 @@ class GameBoard(GameBoardABC):
         if not move_done:
             raise InvalidMoveException("Wrong move coordinates given")
 
+    def __change_checker_to_king_if_can(self, end_x_ind, end_y_ind):
+        """
+        Transform checker to king when the condtitions are set(getting to the
+        end of the board)
+        :param end_x_ind: Index x of checker that is going to be checked after
+        making move
+        :param end_y_ind: Index y of checker that is going to be checked after
+        making move
+        :return:
+        """
+        checker_to_king_y_index = {
+            self.BoardSigns.PLAYER1_CHECKER.value: self.board_size - 1,
+            self.BoardSigns.PLAYER2_CHECKER.value: 0
+        }
+        moved_pawn = self.board_arrays[end_y_ind][end_x_ind]
 
-    # def _find_possible_moves_for_player(self, player_id):
-    #     """
-    #     Finds all moves that player can make, first it searches for capture
-    #     possibility, then for normal moves
-    #     :param player_id: Enum that tells which player's moves should be
-    #     searched
-    #     :return: List of possible moves for pawns
-    #     """
-    #
-    #     pawns_to_be_checked = self._find_players_pawns(player_id)
-    #
-    #     # possible_moves_list = self._find_possible_moves_with_capture(
-    #     #     player_id, pawns_to_be_checked)
+        if moved_pawn in checker_to_king_y_index.keys() and \
+                checker_to_king_y_index[moved_pawn] == end_y_ind:
+            if moved_pawn == self.BoardSigns.PLAYER1_CHECKER.value:
+                self.board_arrays[end_y_ind][end_x_ind] = self.BoardSigns.PLAYER1_KING.value
+            elif moved_pawn == self.BoardSigns.PLAYER2_CHECKER.value:
+                self.board_arrays[end_y_ind][end_x_ind] = self.BoardSigns.PLAYER2_KING.value
 
     def _find_moves_for_pawn(self, x_ind, y_ind, player_id):
         """
@@ -214,7 +258,7 @@ class GameBoard(GameBoardABC):
             x_ind=x_ind,
             y_ind=y_ind,
             board_2d_container=board_to_check,
-            check_backwards=check_backwards
+            check_backwards=True
         )
 
         moves_list = []
@@ -252,7 +296,7 @@ class GameBoard(GameBoardABC):
         players_pawns = self._find_players_pawns(player_id)
         for pawn_x_ind, pawn_y_ind, pawn_enum in players_pawns:
             found_pawn_range = GameBoard.pawn_ranges[pawn_enum]
-            found_check_backwards_pos = GameBoard.pawn_check_backwards[pawn_enum]
+            # found_check_backwards_pos = GameBoard.pawn_check_backwards[pawn_enum]
 
             pawn_capt_pos = self._find_captures_positions(
                 pawn_range=found_pawn_range,
@@ -260,56 +304,12 @@ class GameBoard(GameBoardABC):
                 x_ind=pawn_x_ind,
                 y_ind=pawn_y_ind,
                 board_2d_container=board_to_check,
-                check_backwards=found_check_backwards_pos
+                check_backwards=True
             )
 
             if pawn_capt_pos:
                 return True
         return False
-
-    # def get_pawn_range_and_backward_check(self, pawn):
-    #     """
-    #     Method that returns pawn range
-    #     :param pawn: Pawn in the form of proper enum value
-    #     :return: Pawn range as int and bool telling if the pawn can move
-    #     backward
-    #     """
-    #     if pawn in GameBoard.checker_pawns:
-    #         pawn_range = 1
-    #         check_backwards = False
-    #     elif pawn in GameBoard.king_pawns:
-    #         pawn_range = 10
-    #         check_backwards = True
-    #     else:
-
-    # def _find_possible_moves_with_capture(self, player_id, pawns_to_be_checked):
-    #     """
-    #     Finds possible moves with capture possibility
-    #     :param player_id: Enum witch tells whose player's move it is
-    #     :param pawns_to_be_checked: List of pawns data that should be checked,
-    #     the list should contain tuples with (x_index, y_index, BoardSigns enum)
-    #     :return: List of possible moves in a form of tuple (start_x_index,
-    #     start_y_index, end_x_index, end_y_index, (pawns of the enemy to be
-    #     removed in a form of list of tuples(enemy_pawn_x_index,
-    #     enemy_pawn_y_index))
-    #     """
-    #     king_pawns = (GameBoard.BoardSigns.PLAYER1_KING,
-    #                   GameBoard.BoardSigns.PLAYER2_KING)
-    #
-    #     checker_pawns = (GameBoard.BoardSigns.PLAYER1_CHECKER,
-    #                      GameBoard.BoardSigns.PLAYER2_CHECKER)
-    #
-    #     possible_capture_moves = []
-    #
-    #     board_tuples = self.get_board_copy(self.board_arrays)
-    #
-    #     for x_ind, y_ind, player_pawn_enum in pawns_to_be_checked:
-    #         if player_pawn_enum in checker_pawns:
-    #             capture_moves = self._find_possible_capture_moves(
-    #                 1, x_ind, y_ind, board_tuples, check_backwards=False)
-    #
-    #         if capture_moves:
-    #           return capture_moves
 
     def _find_capture_moves(self, cap_x_ind, cap_y_ind, direction, pawn_range, player_id,
                             board=None, cap_positions=None):
@@ -372,17 +372,6 @@ class GameBoard(GameBoardABC):
             pass
 
         return capture_moves
-
-        # if not capture_moves:
-        #     return []
-        #
-        # for cap_x_move, cap_y_move in capture_moves:
-        #     pos_cap_postions = self._find_captures_positions(
-        #         pawn_range=pawn_range,
-        #         player_id=player_id,
-        #         x_ind=cap_x_move,
-        #         y_ind=cap_y_move
-        #     )
 
     def get_board_without_pawn(self, board_to_get, rem_pawn_x, rem_pawn_y):
         """
@@ -459,10 +448,10 @@ class GameBoard(GameBoardABC):
             if next_el in enemy_pawns:
                 check_x_ind, check_y_ind, check_el = self._find_next_cross_tab_el(
                     next_x_ind, next_y_ind, direction, board_2d_container)
-                if check_el == GameBoard.BoardSigns.EMPTY_BLACK:
+                if check_el == GameBoard.BoardSigns.EMPTY_BLACK.value:
                     return next_x_ind, next_y_ind, direction
                 return None
-            elif next_el == GameBoard.BoardSigns.EMPTY_BLACK:
+            elif next_el == GameBoard.BoardSigns.EMPTY_BLACK.value:
                 pass
             else:
                 return None
@@ -505,50 +494,6 @@ class GameBoard(GameBoardABC):
             except MoveCheckOutsideOfArray:
                 pass
         return possible_moves
-
-    #     def _find_possible_capture_moves(self, pawn_range, player_id, x_ind, y_ind, board_tuples,
-    #                                      check_backwards=False):
-    #         """
-    #         Finds possible capture move for given board, then searches for more
-    #         moves using recurrence call
-    #         :param player_id: Id of the player in a form of Players enum
-    #         :param x_ind: X index of the pawn that is going to get check capture
-    #         moves
-    #         :param y_ind: Y index of the pawn that is going to get check capture
-    #         moves
-    #         :param board_tuples: Board arrays where checks should be performed
-    #         :return: List of possible moves in a form of tuple (start_x_index,
-    #         start_y_index, end_x_index, end_y_index, (pawns of the enemy to be
-    #         removed in a form of list of tuples(enemy_pawn_x_index,
-    #         enemy_pawn_y_index))
-    #         """
-    #         directions = [x for x in GameBoard.Direction] if check_backwards else [
-    #             GameBoard.Direction.LEFT_UP, GameBoard.Direction.RIGHT_UP]
-    #
-    #         enemy_pawns = GameBoard.allowed_pawns[GameBoard.opposite_player[player_id]]
-    #
-    #         possible_capture_pawns = []
-    #
-    #         for direction in directions:
-    #             next_x_ind = x_ind
-    #             next_y_ind = y_ind
-    #             try:
-    #                 for i in range(pawn_range):
-    #                     next_x_ind, next_y_ind, next_el = self._find_next_cross_tab_el(
-    #                         next_x_ind, next_y_ind, direction)
-    #                     raise NotImplementedError("something went wrong")
-    #
-    #                     # if next_el in enemy_pawns:
-    #                     #     possible_capture_pawns += \
-    #                     #         self._find_possible_capture_moves(
-    #                     #             pawn_range, player_id,
-    #
-    #
-    #             except MoveCheckOutsideOfArray:
-    #                 pass
-    #
-    #
-    # #    def _find_next_capture(self, next_x_ind, next_y_ind)
 
     def _find_players_pawns(self, player_id):
         """
@@ -602,89 +547,6 @@ class GameBoard(GameBoardABC):
                 "moved outside the array")
         return new_x_ind, new_y_ind, el_to_ret
 
-    # def _find_possible_moves_for_given_pawn(self, player_id, x_ind, y_ind):
-    #     """
-    #     Finds possible simple move coords for the pawn
-    #     :param player_id: Whose player pawn this method should check
-    #     :return: List of possible final coords for pawn
-    #     """
-    #
-    #     opposite_players_pawns = self.allowed_pawns[self.opposite_player[player_id]]
-    #     empty_alllowed_field = self.BoardSigns.EMPTY_BLACK
-    #
-    #     player_checker = self.allowed_pawns[player_id][0]
-    #     player_king = self.allowed_pawns[player_id][1]
-    #
-    #     if self.board_arrays[y_ind][x_ind] == player_checker:
-    #         possible_moves_positions = self._find_pawns_on_diagonal_positions(
-    #             1, x_ind, y_ind, opposite_players_pawns)
-
-    # def _find_pawns_on_diagonal_positions(self, pawn_range, x_ind, y_ind, pawns_to_capture,
-    #                                       check_backwards=False):
-    #     """
-    #     Finds possible positions for a given checker
-    #     :param pawn_range: Range of the pawn
-    #     :param x_ind: Board x index
-    #     :param y_ind: Board y index
-    #     :param pawns_to_capture: Types of pawns that can be captured
-    #     :param check_backwards: Should check be also done backward
-    #     :return: List of possible positions after capturing
-    #     """
-    #     list_of_possible_moves = []
-    #     directions_to_check = [x for x in GameBoard.Direction] if check_backwards else\
-    #         [GameBoard.Direction.LEFT_UP, GameBoard.Direction.RIGHT_UP]
-    #
-    #     for direction in directions_to_check:
-    #         try:
-    #             next_x_ind, next_y_ind = x_ind, y_ind
-    #             for i in range(pawn_range):
-    #                 next_x_ind, next_y_ind, next_el = self._find_next_cross_tab_el(
-    #                     next_x_ind, next_y_ind, direction)
-    #                 if next_el == GameBoard.BoardSigns.EMPTY_BLACK:
-    #                     list_of_possible_moves.append((next_x_ind, next_y_ind))
-    #                 elif next_el in pawns_to_capture:
-    #                     raise NotImplementedError("agains something wrong")
-    #         except MoveCheckOutsideOfArray:
-    #             pass
-
-    # def _find_moves_for_found_capture(self, pawn_range, capt_x_int, capt_y_ind, direction):
-    #     """
-    #     Finds possible moves for given pawn
-    #     :param pawn_range:
-    #     :param capt_x_int:
-    #     :param capt_y_ind:
-    #     :return:
-    #     """
-    #     # TODO verify if this is a good approach, maybe i should check if capturing
-    #     # is possible first and then check possible moves after capture, if its not possible
-    #     # then user can move wherever he wants
-
-    # def _get_positions_after_capture(self, pawn_range, capt_x_ind, capt_y_ind, direction):
-    #     """
-    #     Returns the list of positions after capturing
-    #     :param capt_x_ind: X index of the pawn that's going to be captured
-    #     :param capt_y_ind: Y index of the pawn that's going to be captured
-    #     :return: List of possible positions, empty list if capturing is not
-    #     possible
-    #     """
-    #
-    #     next_x_ind = capt_x_ind
-    #     next_y_ind = capt_y_ind
-    #     list_of_positions = []
-    #
-    #     try:
-    #         for i in range(pawn_range):
-    #             next_x_ind, next_y_ind, next_el = self._find_next_cross_tab_el(
-    #                 next_x_ind, next_y_ind, direction)
-    #             if next_el == GameBoard.BoardSigns.EMPTY_BLACK:
-    #                 list_of_positions.append((next_x_ind, next_y_ind))
-    #             else:
-    #                 break
-    #     except MoveCheckOutsideOfArray:
-    #         pass
-    #
-    #     return list_of_positions
-
     def get_board_element_enum(self, x_ind, y_ind, board=None):
         """
         Returns board element enum under given
@@ -703,17 +565,44 @@ class GameBoard(GameBoardABC):
 if __name__ == '__main__':
     game_board = GameBoard()
     game_board._initialize_board()
-    print(game_board.board_arrays)
-    game_board.fill_board_with_starting_positions()
-    print(game_board.board_arrays)
-    # print(game_board.get_board_without_pawn(game_board.board_arrays, 0, 0))
-    game_board.make_move(
-        GameBoard.Players.PLAYER1, 'c3b4'
-    )
-    game_board.make_move(
-        GameBoard.Players.PLAYER2, 'd6c5'
-    )
+    game_board.board_arrays = [
+            [GameBoard.BoardSigns.EMPTY_BLACK.value if x % 2 == y % 2 else
+             GameBoard.BoardSigns.EMPTY_WHITE.value for x in range(game_board.board_size)]
+            for y in range(game_board.board_size)]
     get_board_str = create_string_board_from_output(should_add_indexes=True)(
         game_board.get_board_view)
-    print(get_board_str())
+    game_board.board_arrays[6][6] = GameBoard.BoardSigns.PLAYER2_CHECKER.value
+    game_board.board_arrays[7][5] = GameBoard.BoardSigns.PLAYER2_CHECKER.value
+    game_board.board_arrays[7][7] = GameBoard.BoardSigns.PLAYER2_CHECKER.value
+    game_board.board_arrays[5][7] = GameBoard.BoardSigns.PLAYER1_CHECKER.value
 
+    print(game_board.check_game_state(GameBoard.Players.PLAYER1))
+
+    print(get_board_str())
+    # print(game_board.board_arrays)
+    # game_board.fill_board_with_starting_positions()
+    # print(game_board.board_arrays)
+    # # print(game_board.get_board_without_pawn(game_board.board_arrays, 0, 0))
+    # game_board.make_move(
+    #     GameBoard.Players.PLAYER1, 'c3b4'
+    # )
+    # game_board.make_move(
+    #     GameBoard.Players.PLAYER2, 'd6c5'
+    # )
+
+    # print(get_board_str())
+    # print("\nCapture moves:")
+    # x_ind = 1
+    # y_ind = 3
+    # board_enum = game_board.get_board_element_enum(x_ind, y_ind)
+    # print(game_board._find_captures_positions(
+    #     pawn_range=game_board.pawn_ranges[board_enum],
+    #     player_id=game_board.Players.PLAYER1,
+    #     x_ind=x_ind,
+    #     y_ind=y_ind,
+    #     board_2d_container=game_board.board_arrays,
+    #     check_backwards=False
+    # ))
+
+    # game_board._initialize_board()
+    # game_board

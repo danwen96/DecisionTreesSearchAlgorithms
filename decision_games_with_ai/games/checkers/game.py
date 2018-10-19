@@ -1,4 +1,4 @@
-"""Module providing methods for controling flow of the game of Tic Tac Toe"""
+"""Module providing methods for controling flow of the game of Checkers"""
 import random
 
 from decision_games_with_ai.games.gameabc import GameABC
@@ -48,7 +48,10 @@ class Game(GameABC):
         Method that returns actual game state
         :return: GameStates enum representing actual game state
         """
-        return self.game_board.check_game_state()
+        if self.current_players_turn is None:
+            raise TypeError("Method get_game_state from checkers was run before game "
+                            "was initialized")
+        return self.game_board.check_game_state(self.current_players_turn)
 
     def get_board(self):
         """

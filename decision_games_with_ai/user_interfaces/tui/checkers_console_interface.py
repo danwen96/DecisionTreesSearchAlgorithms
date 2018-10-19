@@ -76,8 +76,12 @@ class CheckersConsoleInterface(ControlInterfaceABC):
         Checks if the game has over
         :return: True if the game is ongoing, false otherwise
         """
-        # TODO for now it always return true
-        return True
+        game_state = self.game.get_game_state()
+
+        if game_state == GameStates.ONGOING:
+            return True
+        self._show_end_game_message(game_state)
+        return False
 
     def _show_end_game_message(self, game_result):
         """
