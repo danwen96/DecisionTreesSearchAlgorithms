@@ -20,12 +20,14 @@ class GameBoardABC(ABC):
         """
         return [list(act_list) for act_list in reversed(self.board_arrays)]
 
-    def get_board_copy(self, board_to_copy):
+    def get_board_copy(self, board_to_copy=None):
         """
         Creates copy of the given board
         :param board_to_copy: Two dimensional board to copy
         :return: Two dimensional board copy as tuples
         """
+        if board_to_copy is None:
+            board_to_copy = self.board_arrays
         list_of_tuples = [list(row) for row in board_to_copy]
         return list(list_of_tuples)
 

@@ -3,8 +3,16 @@ import decision_games_with_ai.games.checkers.game
 
 import decision_games_with_ai.user_interfaces.tui.tic_tac_toe_console_interface
 import decision_games_with_ai.user_interfaces.tui.checkers_console_interface
+from decision_games_with_ai.games.checkers.tree_builder import CheckersTreeBuilder
+from decision_games_with_ai.games.tic_tac_toe.tree_builder import TicTacToeTreeBuilder
 from decision_games_with_ai.players.human_player.console_interface_player import \
     ConsoleInterfacePlayer
+from decision_games_with_ai.players.virtual_player.checkers_virtual_enemy import \
+    CheckersVirtualEnemy
+from decision_games_with_ai.players.virtual_player.search_algorithms.minimax_search import \
+    MinimaxSearchAlgorithms
+from decision_games_with_ai.players.virtual_player.tictactoe_virtual_enemy import \
+    TicTacToeVirtualEnemy
 
 
 class GameController:
@@ -25,7 +33,26 @@ class GameController:
         self.player1 = ConsoleInterfacePlayer("Darek otworz")
         self.player2 = ConsoleInterfacePlayer("Gigi dagostino")
         self.game = decision_games_with_ai.games.tic_tac_toe.game.Game()
-        self.control_interface = decision_games_with_ai.user_interfaces.tui.\
+        self.control_interface = decision_games_with_ai.user_interfaces.tui. \
+            tic_tac_toe_console_interface.TicTacToeConsoleInterface(self.game)
+        self.control_interface.play(self.player1, self.player2)
+
+    def play_tic_tac_toe_with_computer(self):
+        """
+        Initializes proper objects for player vs computer tic tac toe game
+        :return:
+        """
+        self.player1 = ConsoleInterfacePlayer("Darek otworz")
+
+        self.game = decision_games_with_ai.games.tic_tac_toe.game.Game()
+        self.player2 = TicTacToeVirtualEnemy(
+            name="Skynet",
+            tree_builder=TicTacToeTreeBuilder(self.game),
+            search_algorithm=MinimaxSearchAlgorithms(depth=5),
+            search_depth=3
+        )
+
+        self.control_interface = decision_games_with_ai.user_interfaces.tui. \
             tic_tac_toe_console_interface.TicTacToeConsoleInterface(self.game)
         self.control_interface.play(self.player1, self.player2)
 
@@ -37,11 +64,31 @@ class GameController:
         self.player1 = ConsoleInterfacePlayer("Mistrz warcab")
         self.player2 = ConsoleInterfacePlayer("Pacholek warcab")
         self.game = decision_games_with_ai.games.checkers.game.Game()
-        self.control_interface = decision_games_with_ai.user_interfaces.tui.\
+        self.control_interface = decision_games_with_ai.user_interfaces.tui. \
+            checkers_console_interface.CheckersConsoleInterface(self.game)
+        self.control_interface.play(self.player1, self.player2)
+
+    def play_checkers_with_computer(self):
+        """
+        Initializes proper objects for player vs computer game
+        :return:
+        """
+        self.player1 = ConsoleInterfacePlayer("Last resistance")
+        self.game = decision_games_with_ai.games.checkers.game.Game()
+        self.player2 = CheckersVirtualEnemy(
+            name="Even worse shynet",
+            tree_builder=CheckersTreeBuilder(self.game),
+            search_algorithm=MinimaxSearchAlgorithms(depth=3),
+            search_depth=3
+        )
+        self.control_interface = decision_games_with_ai.user_interfaces.tui. \
             checkers_console_interface.CheckersConsoleInterface(self.game)
         self.control_interface.play(self.player1, self.player2)
 
 
 if __name__ == '__main__':
     game_controller = GameController()
-    game_controller.play_checkers_two_console_players()
+    # game_controller.play_tic_tac_toe_with_computer()
+    # game_controller.play_tic_tac_toe_two_console_players()
+    # game_controller.play_checkers_two_console_players()
+    game_controller.play_checkers_with_computer()

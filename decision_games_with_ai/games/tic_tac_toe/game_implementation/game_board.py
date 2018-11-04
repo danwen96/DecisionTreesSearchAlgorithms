@@ -39,21 +39,37 @@ class GameBoard(GameBoardABC):
     #     """
     #     return [list(act_list) for act_list in reversed(self.board_arrays)]
 
-    def check_game_state(self):
+    def get_possible_moves(self, board):
+        """
+        Gets possible moves for given board
+        :param board: Board for which the moves will be found
+        :return: List of possible moves in list of strnig in UCI format
+        """
+        possible_moves = []
+        for i, row in enumerate(board):
+            for j, el in enumerate(row):
+                if el == self.BoardSigns.EMPTY.value:
+                    possible_moves.append(CoordsFormatter.translate_from_xy_to_uci(j, i))
+        return possible_moves
+
+    def check_game_state(self, board=None):
         """
         Checks if game has ended
         :return: GameStates state in which game is now
         """
+        if board is None:
+            board = self.board_arrays
+
         wining_lines_list = []
 
         # I copy the references of the actual boards lists, be careful not to
         # modify them there
-        wining_lines_list += [*self.board_arrays]
-        wining_lines_list += [[part_line[i] for part_line in self.board_arrays]
+        wining_lines_list += [*board]
+        wining_lines_list += [[part_line[i] for part_line in board]
                               for i in range(self.board_size)]
-        wining_lines_list.append([self.board_arrays[i][i] for i in range(self.board_size)])
-        wining_lines_list.append([self.board_arrays[i][self.board_size - i - 1] for i in range(
-                self.board_size)])
+        wining_lines_list.append([board[i][i] for i in range(self.board_size)])
+        wining_lines_list.append([board[i][self.board_size - i - 1] for i in range(
+            self.board_size)])
 
         for par_win_line in wining_lines_list:
             if all(GameBoard.BoardSigns.PLAYER1.value == x for x in par_win_line):
@@ -67,22 +83,26 @@ class GameBoard(GameBoardABC):
 
         return GameStates.ONGOING
 
-    def make_move(self, player_id, move_coords):
+    def make_move(self, player_id, move_coords, board=None):
         """
         Makes move on the board on the specific coords
+        :param board: Board that will be checked
         :type player_id: BoardSigns enum value
         :param player_id: Which player is moving
         :param move_coords: Move coords in UCI format
-        :return:
+        :return: Board after making move
         """
+        if board is None:
+            board = self.board_arrays
+
         x_ind, y_ind = CoordsFormatter.translate_from_uci_to_xy(move_coords)
 
-        if self.board_arrays[y_ind][x_ind] == GameBoard.BoardSigns.EMPTY.value:
-            self.board_arrays[y_ind][x_ind] = player_id.value
+        if board[y_ind][x_ind] == GameBoard.BoardSigns.EMPTY.value:
+            board[y_ind][x_ind] = player_id.value
         else:
             raise InvalidMoveException("The chosen field is not empty. Move is invalid.")
-
-        self.moves_list.append(move_coords)
+        return board
+        # self.moves_list.append(move_coords)
 
 
 if __name__ == "__main__":
