@@ -1,5 +1,8 @@
 """Module responsible for building of the decision trees of tic tac toe game"""
+import datetime
+from math import log, sqrt
 from enum import Enum
+from random import choice
 
 from anytree import Node, RenderTree
 from anytree.exporter import DotExporter
@@ -24,12 +27,127 @@ class TicTacToeTreeBuilder(TreeBuilderABC):
         GameBoard.BoardSigns.PLAYER2: GameBoard.BoardSigns.PLAYER1
     }
 
+    player_desired_game_state = {
+        GameBoard.BoardSigns.PLAYER1: GameStates.PLAYER1WIN,
+        GameBoard.BoardSigns.PLAYER2: GameStates.PLAYER2WIN
+    }
+
     def __init__(self, game):
         self.game = game
+        self.max_moves_mt = 100
+        self.mt_wins = {}
+        self.mt_plays = {}
+        self.mt_C = 1.4
+        self.max_depth = 0
         # self.game_board = self.game.game_board
 
     def build_monte_carlo_tree(self, time_limit):
-        raise NotImplementedError("Monte Carlo tree search to do")
+        """
+        Builds tree using monte carlo method
+        :param time_limit: Time limit in seconds after which this method will
+        return built tree
+        :return:
+        """
+        self.max_depth = 0
+        # raise NotImplementedError("Monte Carlo tree search to do")
+        actual_board = self.game.game_board.get_board_copy(copy_format='tuple')
+        player = self.game.current_players_turn
+        possible_moves = self.game.game_board.get_possible_moves(actual_board)
+
+        # Return if there is no choice to be made
+        if not possible_moves:
+            return
+        if len(possible_moves) == 1:
+            return possible_moves[0]
+
+        games = 0
+
+        time_for_move = datetime.timedelta(seconds=time_limit)
+        start_time = datetime.datetime.utcnow()
+        # while datetime.datetime.utcnow() - start_time < time_for_move:
+        while games <= 1000:
+            self._run_monte_carlo_simulation(actual_board, player, player)
+            games += 1
+        print("Number of games: {}".format(games))
+
+        moves_tuples = [(move_cords, self.game.game_board.make_move(
+            player_id=player,
+            move_coords=move_cords,
+            board=actual_board,
+        )) for move_cords in possible_moves]
+
+        percent_wins, move = max(
+            (self.mt_wins.get((player, act_board), 0) /
+             self.mt_plays.get((player, act_board), 1),
+             move) for move, act_board in moves_tuples
+        )
+
+        for x in sorted(
+                ((100 * self.mt_wins.get((player, S), 0) /
+                  self.mt_plays.get((player, S), 1),
+                  self.mt_wins.get((player, S), 0),
+                  self.mt_plays.get((player, S), 0), p)
+                 for p, S in moves_tuples),
+                reverse=True
+        ):
+            print("{3}: {0:.2f}% ({1} /{2})".format(*x))
+        print("Maximum depth searched:", self.max_depth)
+
+        return move
+
+    def _run_monte_carlo_simulation(self, actual_board, actual_player, player):
+        visited_states = set()
+        board_copy = self.game.game_board.get_board_copy(actual_board, copy_format='tuple')
+
+        expand = True
+        for i in range(self.max_moves_mt):
+            possible_moves = self.game.game_board.get_possible_moves(board_copy)
+
+            moves_boards = [(p, self.game.game_board.get_board_copy(
+                self.game.game_board.make_move(
+                    actual_player, p, self.game.game_board.get_board_copy(board_copy)),
+                copy_format='tuple'
+            )) for p in possible_moves]
+
+            if all(self.mt_plays.get((actual_player, S)) for p, S in moves_boards):
+                log_total = log(
+                    sum(self.mt_plays[(actual_player, S)] for p, S in moves_boards))
+                value, play, brd = max(
+                    ((self.mt_wins[(actual_player, S)] / self.mt_plays[(actual_player, S)]) +
+                     self.mt_C * sqrt(log_total / self.mt_plays[(actual_player, S)]), p, S)
+                    for p, S in moves_boards
+                )
+            else:
+                play, brd = choice(moves_boards)
+
+            board_copy = brd
+            #     self.game.game_board.make_move(
+            #     player_id=actual_player,
+            #     move_coords=play,
+            #     board=board_copy
+            # )
+
+            if expand and (actual_player, board_copy) not in self.mt_plays:
+                expand = False
+                self.mt_plays[(actual_player, board_copy)] = 0
+                self.mt_wins[(actual_player, board_copy)] = 0
+                if i > self.max_depth:
+                    self.max_depth = i
+
+            visited_states.add((actual_player, board_copy))
+
+            actual_player = self.next_player_dict[actual_player]
+            game_state = self.game.game_board.check_game_state(board_copy)
+            if game_state in (GameStates.PLAYER1WIN, GameStates.PLAYER2WIN, GameStates.DRAW):
+                break
+
+        for act_player, act_board in visited_states:
+            if (act_player, act_board) not in self.mt_plays:
+                continue
+            self.mt_plays[(act_player, act_board)] += 1
+            # game_state = self.game.game_board.check_game_state(act_board)
+            if game_state == self.player_desired_game_state[player]:
+                self.mt_wins[(act_player, act_board)] += 1
 
     def build_minimax_tree(self, depth):
         """

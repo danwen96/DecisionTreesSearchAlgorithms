@@ -57,6 +57,9 @@ class GameBoard(GameBoardABC):
         Checks if game has ended
         :return: GameStates state in which game is now
         """
+        if isinstance(board, tuple):
+            board = self.get_board_copy(board)
+
         if board is None:
             board = self.board_arrays
 
@@ -92,6 +95,10 @@ class GameBoard(GameBoardABC):
         :param move_coords: Move coords in UCI format
         :return: Board after making move
         """
+        was_tuple = False
+        if isinstance(board, tuple):
+            board = self.get_board_copy(board, copy_format='list')
+            was_tuple = True
         if board is None:
             board = self.board_arrays
 
@@ -101,7 +108,10 @@ class GameBoard(GameBoardABC):
             board[y_ind][x_ind] = player_id.value
         else:
             raise InvalidMoveException("The chosen field is not empty. Move is invalid.")
-        return board
+        if not was_tuple:
+            return board
+        else:
+            return self.get_board_copy(board, copy_format='tuple')
         # self.moves_list.append(move_coords)
 
 

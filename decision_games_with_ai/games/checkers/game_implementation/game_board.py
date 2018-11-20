@@ -83,7 +83,7 @@ class GameBoard(GameBoardABC):
         BoardSigns.PLAYER2_KING: True
     }
 
-    max_moves_without_capture = 50
+    max_moves_without_capture = 15
 
     def __init__(self):
         self.board_size = 8
@@ -132,7 +132,6 @@ class GameBoard(GameBoardABC):
                     all_possible_moves.append(start_ind_str + end_ind_str)
         return all_possible_moves
 
-
     def fill_board_with_starting_positions(self, board_to_fill=None):
         """
         Fills board with starting pawns positions
@@ -158,6 +157,9 @@ class GameBoard(GameBoardABC):
         Checks the state of the game for the actual player
         :return: Game state in a form of GameStates enum
         """
+        if isinstance(board, tuple):
+            board = self.get_board_copy(board)
+
         if board is None:
             board = self.board_arrays
         player1_pawns = self._find_players_pawns(GameBoard.Players.PLAYER1,
@@ -204,6 +206,11 @@ class GameBoard(GameBoardABC):
         :param move_coords: Move coords in UCI format
         :return: Board after making move
         """
+        was_tuple = False
+        if isinstance(board, tuple):
+            board = self.get_board_copy(board)
+            was_tuple = True
+
         changing_class_board = False
         if board is None:
             board = self.board_arrays
@@ -253,6 +260,8 @@ class GameBoard(GameBoardABC):
                 break
         if not move_done:
             raise InvalidMoveException("Wrong move coordinates given")
+        if was_tuple:
+            return self.get_board_copy(board, copy_format='tuple')
         return board
 
     def __change_checker_to_king_if_can(self, end_x_ind, end_y_ind, board=None):

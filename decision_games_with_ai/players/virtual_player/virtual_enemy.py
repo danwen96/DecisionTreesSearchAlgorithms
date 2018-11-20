@@ -4,7 +4,7 @@ import random
 from decision_games_with_ai.players.player_abc import PlayerABC
 
 
-class TicTacToeVirtualEnemy(PlayerABC):
+class VirtualEnemy(PlayerABC):
     """Class providing methods for behaviour of virtual enemy"""
 
     def __init__(self, name, tree_builder, search_algorithm, search_depth=5,
@@ -32,8 +32,9 @@ class TicTacToeVirtualEnemy(PlayerABC):
         Gets virtual enemy move
         :return:
         """
-        root_node = self._get_tree()
-        return self.search_algorithm.search_tree(root_node)
+        # root_node = self._get_tree()
+        # return self.search_algorithm.search_tree(root_node)
+        return self._get_monte_carlo_move()
 
     def _get_tree(self):
         """
@@ -41,3 +42,11 @@ class TicTacToeVirtualEnemy(PlayerABC):
         :return: Root node of the game tree
         """
         return self.tree_builder.build_minimax_tree(self.search_depth)
+
+    def _get_monte_carlo_move(self):
+        # TODO
+        """
+        temporary method
+        :return:
+        """
+        return self.tree_builder.build_monte_carlo_tree(self.time_limit)

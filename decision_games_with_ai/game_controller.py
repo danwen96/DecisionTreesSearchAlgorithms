@@ -7,12 +7,13 @@ from decision_games_with_ai.games.checkers.tree_builder import CheckersTreeBuild
 from decision_games_with_ai.games.tic_tac_toe.tree_builder import TicTacToeTreeBuilder
 from decision_games_with_ai.players.human_player.console_interface_player import \
     ConsoleInterfacePlayer
-from decision_games_with_ai.players.virtual_player.checkers_virtual_enemy import \
-    CheckersVirtualEnemy
+
 from decision_games_with_ai.players.virtual_player.search_algorithms.minimax_search import \
     MinimaxSearchAlgorithms
-from decision_games_with_ai.players.virtual_player.tictactoe_virtual_enemy import \
-    TicTacToeVirtualEnemy
+from decision_games_with_ai.players.virtual_player.search_algorithms.montecarlo_search import \
+    MonteCarloSearchAlghoritm
+from decision_games_with_ai.players.virtual_player.virtual_enemy import \
+    VirtualEnemy
 
 
 class GameController:
@@ -45,7 +46,7 @@ class GameController:
         self.player1 = ConsoleInterfacePlayer("Darek otworz")
 
         self.game = decision_games_with_ai.games.tic_tac_toe.game.Game()
-        self.player2 = TicTacToeVirtualEnemy(
+        self.player2 = VirtualEnemy(
             name="Skynet",
             tree_builder=TicTacToeTreeBuilder(self.game),
             search_algorithm=MinimaxSearchAlgorithms(depth=5),
@@ -75,12 +76,50 @@ class GameController:
         """
         self.player1 = ConsoleInterfacePlayer("Last resistance")
         self.game = decision_games_with_ai.games.checkers.game.Game()
-        self.player2 = CheckersVirtualEnemy(
-            name="Even worse shynet",
+        self.player2 = VirtualEnemy(
+            name="Even worse skynet",
             tree_builder=CheckersTreeBuilder(self.game),
             search_algorithm=MinimaxSearchAlgorithms(depth=3),
             search_depth=3
         )
+        self.control_interface = decision_games_with_ai.user_interfaces.tui. \
+            checkers_console_interface.CheckersConsoleInterface(self.game)
+        self.control_interface.play(self.player1, self.player2)
+
+    def play_tic_tac_toe_with_computer_monte_carlo(self):
+        """
+        Initializes proper objects for player vs computer tic tac toe game
+        :return:
+        """
+        self.player1 = ConsoleInterfacePlayer("Monte otworz")
+
+        self.game = decision_games_with_ai.games.tic_tac_toe.game.Game()
+        self.player2 = VirtualEnemy(
+            name="Skynet carlo",
+            tree_builder=TicTacToeTreeBuilder(self.game),
+            search_algorithm=MonteCarloSearchAlghoritm(find_time=5),
+            search_depth=3
+        )
+
+        self.control_interface = decision_games_with_ai.user_interfaces.tui. \
+            tic_tac_toe_console_interface.TicTacToeConsoleInterface(self.game)
+        self.control_interface.play(self.player1, self.player2)
+
+    def play_checkers_with_computer_monte_carlo(self):
+        """
+        Initializes proper objects for player vs computer checkers game
+        :return:
+        """
+        self.player1 = ConsoleInterfacePlayer("Memkers otworz")
+
+        self.game = decision_games_with_ai.games.checkers.game.Game()
+        self.player2 = VirtualEnemy(
+            name="Warcabowy zabojca",
+            tree_builder=CheckersTreeBuilder(self.game),
+            search_algorithm=MonteCarloSearchAlghoritm(find_time=5),
+            search_depth=3
+        )
+
         self.control_interface = decision_games_with_ai.user_interfaces.tui. \
             checkers_console_interface.CheckersConsoleInterface(self.game)
         self.control_interface.play(self.player1, self.player2)
@@ -91,4 +130,6 @@ if __name__ == '__main__':
     # game_controller.play_tic_tac_toe_with_computer()
     # game_controller.play_tic_tac_toe_two_console_players()
     # game_controller.play_checkers_two_console_players()
-    game_controller.play_checkers_with_computer()
+    # game_controller.play_checkers_with_computer()
+    # game_controller.play_tic_tac_toe_with_computer_monte_carlo()
+    game_controller.play_checkers_with_computer_monte_carlo()
