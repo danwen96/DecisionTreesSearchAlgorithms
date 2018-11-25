@@ -17,7 +17,8 @@ class GameBoard(GameBoardABC):
         EMPTY = '-'
 
     def __init__(self):
-        self.board_size = 3
+        self.board_size = 9
+        self.winning_combination = 5
         self._initialize_board()
 
     def _initialize_board(self):
@@ -74,11 +75,34 @@ class GameBoard(GameBoardABC):
         wining_lines_list.append([board[i][self.board_size - i - 1] for i in range(
             self.board_size)])
 
+        # TODO modify building list for alghoritm to be able to check cross wins as well
+
+        # for par_win_line in wining_lines_list:
+        #     if all(GameBoard.BoardSigns.PLAYER1.value == x for x in par_win_line):
+        #         return GameStates.PLAYER1WIN
+        #     if all(GameBoard.BoardSigns.PLAYER2.value == x for x in par_win_line):
+        #         return GameStates.PLAYER2WIN
+
         for par_win_line in wining_lines_list:
-            if all(GameBoard.BoardSigns.PLAYER1.value == x for x in par_win_line):
-                return GameStates.PLAYER1WIN
-            if all(GameBoard.BoardSigns.PLAYER2.value == x for x in par_win_line):
-                return GameStates.PLAYER2WIN
+            previous_sign = GameBoard.BoardSigns.EMPTY.value
+            signs_counter = 0
+            for sign in par_win_line:
+                if sign == GameBoard.BoardSigns.EMPTY.value:
+                    previous_sign = GameBoard.BoardSigns.EMPTY.value
+                    signs_counter = 0
+                else:
+                    if sign == previous_sign:
+                        signs_counter += 1
+                        if signs_counter >= self.winning_combination:
+                            if sign == GameBoard.BoardSigns.PLAYER1.value:
+                                return GameStates.PLAYER1WIN
+                            elif sign == GameBoard.BoardSigns.PLAYER2.value:
+                                return GameStates.PLAYER2WIN
+                            else:
+                                return TypeError("Unexpected sign type")
+                    else:
+                        signs_counter = 1
+                        previous_sign = sign
 
         if all(GameBoard.BoardSigns.EMPTY.value not in part_win_line for
                part_win_line in wining_lines_list):

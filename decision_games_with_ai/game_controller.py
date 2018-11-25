@@ -31,8 +31,8 @@ class GameController:
         Initializes proper objects for player vs player tic tac toe game
         :return:
         """
-        self.player1 = ConsoleInterfacePlayer("Darek otworz")
-        self.player2 = ConsoleInterfacePlayer("Gigi dagostino")
+        self.player1 = ConsoleInterfacePlayer("Human 1")
+        self.player2 = ConsoleInterfacePlayer("Human 2")
         self.game = decision_games_with_ai.games.tic_tac_toe.game.Game()
         self.control_interface = decision_games_with_ai.user_interfaces.tui. \
             tic_tac_toe_console_interface.TicTacToeConsoleInterface(self.game)
@@ -43,11 +43,11 @@ class GameController:
         Initializes proper objects for player vs computer tic tac toe game
         :return:
         """
-        self.player1 = ConsoleInterfacePlayer("Darek otworz")
+        self.player1 = ConsoleInterfacePlayer("Human 1")
 
         self.game = decision_games_with_ai.games.tic_tac_toe.game.Game()
         self.player2 = VirtualEnemy(
-            name="Skynet",
+            name="Computer player mini max",
             tree_builder=TicTacToeTreeBuilder(self.game),
             search_algorithm=MinimaxSearchAlgorithms(depth=5),
             search_depth=3
@@ -62,8 +62,8 @@ class GameController:
         Initializes proper objects for player vs player checkers game
         :return:
         """
-        self.player1 = ConsoleInterfacePlayer("Mistrz warcab")
-        self.player2 = ConsoleInterfacePlayer("Pacholek warcab")
+        self.player1 = ConsoleInterfacePlayer("Human 1")
+        self.player2 = ConsoleInterfacePlayer("Human 2")
         self.game = decision_games_with_ai.games.checkers.game.Game()
         self.control_interface = decision_games_with_ai.user_interfaces.tui. \
             checkers_console_interface.CheckersConsoleInterface(self.game)
@@ -74,10 +74,10 @@ class GameController:
         Initializes proper objects for player vs computer game
         :return:
         """
-        self.player1 = ConsoleInterfacePlayer("Last resistance")
+        self.player1 = ConsoleInterfacePlayer("Human player")
         self.game = decision_games_with_ai.games.checkers.game.Game()
         self.player2 = VirtualEnemy(
-            name="Even worse skynet",
+            name="Computer player minimax",
             tree_builder=CheckersTreeBuilder(self.game),
             search_algorithm=MinimaxSearchAlgorithms(depth=3),
             search_depth=3
@@ -91,11 +91,11 @@ class GameController:
         Initializes proper objects for player vs computer tic tac toe game
         :return:
         """
-        self.player1 = ConsoleInterfacePlayer("Monte otworz")
+        self.player1 = ConsoleInterfacePlayer("Human player")
 
         self.game = decision_games_with_ai.games.tic_tac_toe.game.Game()
         self.player2 = VirtualEnemy(
-            name="Skynet carlo",
+            name="Computer player monte carlo",
             tree_builder=TicTacToeTreeBuilder(self.game),
             search_algorithm=MonteCarloSearchAlghoritm(find_time=5),
             search_depth=3
@@ -110,11 +110,11 @@ class GameController:
         Initializes proper objects for player vs computer checkers game
         :return:
         """
-        self.player1 = ConsoleInterfacePlayer("Memkers otworz")
+        self.player1 = ConsoleInterfacePlayer("Human player")
 
         self.game = decision_games_with_ai.games.checkers.game.Game()
         self.player2 = VirtualEnemy(
-            name="Warcabowy zabojca",
+            name="Computer player monet carlo",
             tree_builder=CheckersTreeBuilder(self.game),
             search_algorithm=MonteCarloSearchAlghoritm(find_time=5),
             search_depth=3
@@ -127,9 +127,9 @@ class GameController:
 
 if __name__ == '__main__':
     game_controller = GameController()
-    # game_controller.play_tic_tac_toe_with_computer()
     # game_controller.play_tic_tac_toe_two_console_players()
     # game_controller.play_checkers_two_console_players()
+    game_controller.play_tic_tac_toe_with_computer()
     # game_controller.play_checkers_with_computer()
     # game_controller.play_tic_tac_toe_with_computer_monte_carlo()
-    game_controller.play_checkers_with_computer_monte_carlo()
+    # game_controller.play_checkers_with_computer_monte_carlo()

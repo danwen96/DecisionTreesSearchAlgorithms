@@ -67,10 +67,11 @@ class CheckersTreeBuilder(TreeBuilderABC):
         # time_for_move = datetime.timedelta(seconds=time_limit)
         # start_time = datetime.datetime.utcnow()
         # while datetime.datetime.utcnow() - start_time < time_for_move:
-        while games <= 1000:
+        while games <= 100:
             self._run_monte_carlo_simulation(actual_board, player, player)
             games += 1
-            print(games)
+            if games % 10 == 0:
+                print(games)
         print("Number of games: {}".format(games))
 
         moves_tuples = [(move_cords, self.game.game_board.make_move(

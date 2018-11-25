@@ -235,14 +235,16 @@ class GameBoard(GameBoardABC):
         move_done = False
         for mov_ind, pawn_rem_list in possible_moves:
             if (end_x_ind, end_y_ind) == mov_ind:
-                self.move_count += 1
+                if changing_class_board:
+                    self.move_count += 1
                 board[end_y_ind][end_x_ind] = \
                     board[start_y_ind][start_x_ind]
                 board[start_y_ind][start_x_ind] = GameBoard.BoardSigns.EMPTY_BLACK.value
                 self.__change_checker_to_king_if_can(end_x_ind, end_y_ind, board)
 
                 for x_rm_ind, y_rm_ind in pawn_rem_list:
-                    self.move_count = 0
+                    if changing_class_board:
+                        self.move_count = 0
                     if changing_class_board:
                         self.board_arrays = self.get_board_without_pawn(
                             board_to_get=self.board_arrays,
