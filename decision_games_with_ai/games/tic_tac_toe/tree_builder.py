@@ -11,6 +11,7 @@ from decision_games_with_ai.games.tic_tac_toe.game_implementation.game_board imp
 from decision_games_with_ai.games.tree_builder_abc import TreeBuilderABC
 
 import anytree
+import easyAI
 
 from decision_games_with_ai.games.utils.game_states_enums import GameStates
 
@@ -65,7 +66,7 @@ class TicTacToeTreeBuilder(TreeBuilderABC):
         time_for_move = datetime.timedelta(seconds=time_limit)
         start_time = datetime.datetime.utcnow()
         # while datetime.datetime.utcnow() - start_time < time_for_move:
-        while games <= 10000:
+        while games <= 1000:
             self._run_monte_carlo_simulation(actual_board, player, player)
             games += 1
             if games % 10 == 0:

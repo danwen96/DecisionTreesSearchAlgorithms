@@ -17,8 +17,8 @@ class GameBoard(GameBoardABC):
         EMPTY = '-'
 
     def __init__(self):
-        self.board_size = 9
-        self.winning_combination = 5
+        self.board_size = 3
+        self.winning_combination = 3
         self._initialize_board()
 
     def _initialize_board(self):
@@ -71,17 +71,39 @@ class GameBoard(GameBoardABC):
         wining_lines_list += [*board]
         wining_lines_list += [[part_line[i] for part_line in board]
                               for i in range(self.board_size)]
-        wining_lines_list.append([board[i][i] for i in range(self.board_size)])
-        wining_lines_list.append([board[i][self.board_size - i - 1] for i in range(
-            self.board_size)])
 
-        # TODO modify building list for alghoritm to be able to check cross wins as well
+        for possible_combination_num in range(len(board)):
+            new_row_list = []
+            try:
+                for row_ind, row in enumerate(board[possible_combination_num:]):
+                    new_row_list.append(row[row_ind])
+            except IndexError:
+                pass
+            wining_lines_list.append(new_row_list)
 
-        # for par_win_line in wining_lines_list:
-        #     if all(GameBoard.BoardSigns.PLAYER1.value == x for x in par_win_line):
-        #         return GameStates.PLAYER1WIN
-        #     if all(GameBoard.BoardSigns.PLAYER2.value == x for x in par_win_line):
-        #         return GameStates.PLAYER2WIN
+            new_row_list = []
+            try:
+                for row_ind, row in enumerate(board):
+                    new_row_list.append((row[row_ind + possible_combination_num]))
+            except IndexError:
+                pass
+            wining_lines_list.append(new_row_list)
+
+            new_row_list = []
+            try:
+                for row_ind, row in enumerate(reversed(board[:possible_combination_num])):
+                    new_row_list.append(row[row_ind])
+            except IndexError:
+                pass
+            wining_lines_list.append(new_row_list)
+
+            new_row_list = []
+            try:
+                for row_ind, row in enumerate(reversed(board)):
+                    new_row_list.append((row[row_ind + possible_combination_num]))
+            except IndexError:
+                pass
+            wining_lines_list.append(new_row_list)
 
         for par_win_line in wining_lines_list:
             previous_sign = GameBoard.BoardSigns.EMPTY.value
