@@ -2,6 +2,7 @@ import decision_games_with_ai.games.tic_tac_toe.game
 import decision_games_with_ai.games.checkers.game
 
 import decision_games_with_ai.user_interfaces.tui.tic_tac_toe_console_interface
+import decision_games_with_ai.user_interfaces.tpai.tic_tac_toe_console_arena_interface
 import decision_games_with_ai.user_interfaces.tui.checkers_console_interface
 from decision_games_with_ai.games.checkers.tree_builder import CheckersTreeBuilder
 from decision_games_with_ai.games.tic_tac_toe.tree_builder import TicTacToeTreeBuilder
@@ -124,6 +125,32 @@ class GameController:
             checkers_console_interface.CheckersConsoleInterface(self.game)
         self.control_interface.play(self.player1, self.player2)
 
+    def play_multiple_games_between_computers_monte_carlo(self):
+        """
+        Initializes proper objects for arena play between virtual players
+        :return:
+        """
+        self.game = decision_games_with_ai.games.tic_tac_toe.game.Game()
+
+        self.player1 = VirtualEnemy(
+            name="Virtual player 1",
+            tree_builder=TicTacToeTreeBuilder(self.game),
+            search_algorithm=MonteCarloSearchAlghoritm(find_time=5),
+            search_depth=3
+        )
+
+        self.player2 = VirtualEnemy(
+            name="Virtual player 2",
+            tree_builder=TicTacToeTreeBuilder(self.game),
+            search_algorithm=MonteCarloSearchAlghoritm(find_time=5),
+            search_depth=3
+        )
+
+        self.control_interface = decision_games_with_ai.user_interfaces.tpai. \
+            tic_tac_toe_console_arena_interface.TicTacToeConsoleArenaInterface(
+                self.game, 1000, print_val_interval=10)
+        self.control_interface.play(self.player1, self.player2)
+
 
 if __name__ == '__main__':
     game_controller = GameController()
@@ -131,5 +158,6 @@ if __name__ == '__main__':
     # game_controller.play_checkers_two_console_players()
     # game_controller.play_tic_tac_toe_with_computer()
     # game_controller.play_checkers_with_computer()
-    game_controller.play_tic_tac_toe_with_computer_monte_carlo()
+    # game_controller.play_tic_tac_toe_with_computer_monte_carlo()
     # game_controller.play_checkers_with_computer_monte_carlo()
+    game_controller.play_multiple_games_between_computers_monte_carlo()

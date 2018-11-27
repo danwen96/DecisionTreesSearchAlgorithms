@@ -38,7 +38,7 @@ class TicTacToeTreeBuilder(TreeBuilderABC):
         self.max_moves_mt = 100
         self.mt_wins = {}
         self.mt_plays = {}
-        self.mt_C = 1.4
+        self.mt_C = 3
         self.max_depth = 0
         # self.game_board = self.game.game_board
 
@@ -66,12 +66,12 @@ class TicTacToeTreeBuilder(TreeBuilderABC):
         time_for_move = datetime.timedelta(seconds=time_limit)
         start_time = datetime.datetime.utcnow()
         # while datetime.datetime.utcnow() - start_time < time_for_move:
-        while games <= 1000:
+        while games <= 100:
             self._run_monte_carlo_simulation(actual_board, player, player)
             games += 1
-            if games % 10 == 0:
-                print(games)
-        print("Number of games: {}".format(games))
+            # if games % 10 == 0:
+                # print(games)
+        # print("Number of games: {}".format(games))
 
         moves_tuples = [(move_cords, self.game.game_board.make_move(
             player_id=player,
@@ -85,16 +85,16 @@ class TicTacToeTreeBuilder(TreeBuilderABC):
              move) for move, act_board in moves_tuples
         )
 
-        for x in sorted(
-                ((100 * self.mt_wins.get((player, S), 0) /
-                  self.mt_plays.get((player, S), 1),
-                  self.mt_wins.get((player, S), 0),
-                  self.mt_plays.get((player, S), 0), p)
-                 for p, S in moves_tuples),
-                reverse=True
-        ):
-            print("{3}: {0:.2f}% ({1} /{2})".format(*x))
-        print("Maximum depth searched:", self.max_depth)
+        # for x in sorted(
+        #         ((100 * self.mt_wins.get((player, S), 0) /
+        #           self.mt_plays.get((player, S), 1),
+        #           self.mt_wins.get((player, S), 0),
+        #           self.mt_plays.get((player, S), 0), p)
+        #          for p, S in moves_tuples),
+        #         reverse=True
+        # ):
+        #     print("{3}: {0:.2f}% ({1} /{2})".format(*x))
+        # print("Maximum depth searched:", self.max_depth)
 
         return move
 
@@ -232,6 +232,15 @@ class TicTacToeTreeBuilder(TreeBuilderABC):
                 actual_board=board_copy,
                 move=pos_move
             )
+
+    def nemumax_tree(self):
+        """
+        Method that will use nemumax search with alpha beta prunning
+        :return:
+        """
+        # TODO add nemumax method
+        raise NotImplementedError("Not done yet")
+
 
     def _static_evaluation_value(self, actual_board, player):
         """
