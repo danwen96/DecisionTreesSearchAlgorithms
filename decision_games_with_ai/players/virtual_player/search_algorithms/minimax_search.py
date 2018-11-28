@@ -47,8 +47,8 @@ class MinimaxSearchAlgorithms(SearchAlgorithmsABC):
 
         next_move_index = children_values.index(max(children_values))
         next_move_node = root_node.children[next_move_index]
-        print(children_values)
-        print([root_node.children])
+        # print(children_values)
+        # print([root_node.children])
         return next_move_node.move
 
     def _minimax_recursive_call(self, node, operator):

@@ -8,11 +8,11 @@ class MonteCarloSearchAlghoritm(SearchAlgorithmsABC):
     """Class providing methods for packing monte carlo tree builder methods
     into virtual enemy"""
 
-    def __init__(self, find_time = 5):
+    def __init__(self):
         self.actual_search_method = self._get_montecarlo_move
 
     def search_tree(self, move):
-        return self._get_montecarlo_move(move)
+        return self.actual_search_method(move)
 
     def _get_montecarlo_move(self, move):
         return move

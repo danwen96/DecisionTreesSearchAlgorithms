@@ -3,7 +3,7 @@ from enum import Enum
 from decision_games_with_ai.games.game_board_abc import GameBoardABC
 from decision_games_with_ai.games.utils.events_exceptions import InvalidMoveException
 from decision_games_with_ai.games.utils.coords_formatters import CoordsFormatter
-from decision_games_with_ai.games.utils.game_states_enums import GameStates
+from decision_games_with_ai.games.utils.global_enums import GameStates
 from decision_games_with_ai.games.utils.view_modificators import create_string_board_from_output
 
 

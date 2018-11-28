@@ -1,6 +1,6 @@
 from decision_games_with_ai.games.checkers.game_implementation.game_board import GameBoard
 from decision_games_with_ai.games.utils.events_exceptions import InvalidMoveException
-from decision_games_with_ai.games.utils.game_states_enums import GameStates
+from decision_games_with_ai.games.utils.global_enums import GameStates
 from decision_games_with_ai.games.utils.view_modificators import create_string_board_from_output
 from decision_games_with_ai.user_interfaces.control_interface_abc import ControlInterfaceABC
 

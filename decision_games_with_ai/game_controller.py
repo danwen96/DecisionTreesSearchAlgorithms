@@ -6,6 +6,7 @@ import decision_games_with_ai.user_interfaces.tpai.tic_tac_toe_console_arena_int
 import decision_games_with_ai.user_interfaces.tui.checkers_console_interface
 from decision_games_with_ai.games.checkers.tree_builder import CheckersTreeBuilder
 from decision_games_with_ai.games.tic_tac_toe.tree_builder import TicTacToeTreeBuilder
+from decision_games_with_ai.games.utils.global_enums import SearchMethods
 from decision_games_with_ai.players.human_player.console_interface_player import \
     ConsoleInterfacePlayer
 
@@ -51,7 +52,8 @@ class GameController:
             name="Computer player mini max",
             tree_builder=TicTacToeTreeBuilder(self.game),
             search_algorithm=MinimaxSearchAlgorithms(depth=5),
-            search_depth=3
+            search_method_enum=SearchMethods.MINIMAX,
+            search_depth=9
         )
 
         self.control_interface = decision_games_with_ai.user_interfaces.tui. \
@@ -81,6 +83,7 @@ class GameController:
             name="Computer player minimax",
             tree_builder=CheckersTreeBuilder(self.game),
             search_algorithm=MinimaxSearchAlgorithms(depth=3),
+            search_method_enum=SearchMethods.MINIMAX,
             search_depth=3
         )
         self.control_interface = decision_games_with_ai.user_interfaces.tui. \
@@ -98,7 +101,8 @@ class GameController:
         self.player2 = VirtualEnemy(
             name="Computer player monte carlo",
             tree_builder=TicTacToeTreeBuilder(self.game),
-            search_algorithm=MonteCarloSearchAlghoritm(find_time=5),
+            search_algorithm=MonteCarloSearchAlghoritm(),
+            search_method_enum=SearchMethods.MONTECARLO,
             search_depth=3
         )
 
@@ -117,7 +121,8 @@ class GameController:
         self.player2 = VirtualEnemy(
             name="Computer player monet carlo",
             tree_builder=CheckersTreeBuilder(self.game),
-            search_algorithm=MonteCarloSearchAlghoritm(find_time=5),
+            search_algorithm=MonteCarloSearchAlghoritm(),
+            search_method_enum=SearchMethods.MONTECARLO,
             search_depth=3
         )
 
@@ -135,14 +140,16 @@ class GameController:
         self.player1 = VirtualEnemy(
             name="Virtual player 1",
             tree_builder=TicTacToeTreeBuilder(self.game),
-            search_algorithm=MonteCarloSearchAlghoritm(find_time=5),
+            search_algorithm=MinimaxSearchAlgorithms(),
+            search_method_enum=SearchMethods.MINIMAX,
             search_depth=3
         )
 
         self.player2 = VirtualEnemy(
             name="Virtual player 2",
             tree_builder=TicTacToeTreeBuilder(self.game),
-            search_algorithm=MonteCarloSearchAlghoritm(find_time=5),
+            search_algorithm=MonteCarloSearchAlghoritm(),
+            search_method_enum=SearchMethods.MONTECARLO,
             search_depth=3
         )
 

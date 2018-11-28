@@ -13,7 +13,7 @@ from decision_games_with_ai.games.tree_builder_abc import TreeBuilderABC
 import anytree
 import easyAI
 
-from decision_games_with_ai.games.utils.game_states_enums import GameStates
+from decision_games_with_ai.games.utils.global_enums import GameStates, SearchMethods
 
 
 class TicTacToeTreeBuilder(TreeBuilderABC):
@@ -40,6 +40,7 @@ class TicTacToeTreeBuilder(TreeBuilderABC):
         self.mt_plays = {}
         self.mt_C = 3
         self.max_depth = 0
+        self.print_info = False
         # self.game_board = self.game.game_board
 
     def build_monte_carlo_tree(self, time_limit):
@@ -69,9 +70,9 @@ class TicTacToeTreeBuilder(TreeBuilderABC):
         while games <= 100:
             self._run_monte_carlo_simulation(actual_board, player, player)
             games += 1
-            # if games % 10 == 0:
-                # print(games)
-        # print("Number of games: {}".format(games))
+
+        if self.print_info:
+            print("Number of games: {}".format(games))
 
         moves_tuples = [(move_cords, self.game.game_board.make_move(
             player_id=player,
@@ -85,20 +86,28 @@ class TicTacToeTreeBuilder(TreeBuilderABC):
              move) for move, act_board in moves_tuples
         )
 
-        # for x in sorted(
-        #         ((100 * self.mt_wins.get((player, S), 0) /
-        #           self.mt_plays.get((player, S), 1),
-        #           self.mt_wins.get((player, S), 0),
-        #           self.mt_plays.get((player, S), 0), p)
-        #          for p, S in moves_tuples),
-        #         reverse=True
-        # ):
-        #     print("{3}: {0:.2f}% ({1} /{2})".format(*x))
-        # print("Maximum depth searched:", self.max_depth)
+        if self.print_info:
+            for x in sorted(
+                    ((100 * self.mt_wins.get((player, S), 0) /
+                      self.mt_plays.get((player, S), 1),
+                      self.mt_wins.get((player, S), 0),
+                      self.mt_plays.get((player, S), 0), p)
+                     for p, S in moves_tuples),
+                    reverse=True
+            ):
+                print("{3}: {0:.2f}% ({1} /{2})".format(*x))
+            print("Maximum depth searched:", self.max_depth)
 
         return move
 
     def _run_monte_carlo_simulation(self, actual_board, actual_player, player):
+        """
+
+        :param actual_board:
+        :param actual_player:
+        :param player:
+        :return:
+        """
         visited_states = set()
         board_copy = self.game.game_board.get_board_copy(actual_board, copy_format='tuple')
 
@@ -171,7 +180,6 @@ class TicTacToeTreeBuilder(TreeBuilderABC):
         )
 
         # print(RenderTree(main_root))
-
         return main_root.children[0]
         # input("pause")
 
@@ -240,7 +248,6 @@ class TicTacToeTreeBuilder(TreeBuilderABC):
         """
         # TODO add nemumax method
         raise NotImplementedError("Not done yet")
-
 
     def _static_evaluation_value(self, actual_board, player):
         """

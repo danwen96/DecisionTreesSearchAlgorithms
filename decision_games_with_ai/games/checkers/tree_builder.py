@@ -12,7 +12,7 @@ from decision_games_with_ai.games.tree_builder_abc import TreeBuilderABC
 
 import anytree
 
-from decision_games_with_ai.games.utils.game_states_enums import GameStates
+from decision_games_with_ai.games.utils.global_enums import GameStates, SearchMethods
 
 
 class CheckersTreeBuilder(TreeBuilderABC):
