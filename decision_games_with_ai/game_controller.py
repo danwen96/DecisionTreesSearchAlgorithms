@@ -165,6 +165,6 @@ if __name__ == '__main__':
     # game_controller.play_checkers_two_console_players()
     # game_controller.play_tic_tac_toe_with_computer()
     # game_controller.play_checkers_with_computer()
-    # game_controller.play_tic_tac_toe_with_computer_monte_carlo()
+    game_controller.play_tic_tac_toe_with_computer_monte_carlo()
     # game_controller.play_checkers_with_computer_monte_carlo()
-    game_controller.play_multiple_games_between_computers_monte_carlo()
+    # game_controller.play_multiple_games_between_computers_monte_carlo()

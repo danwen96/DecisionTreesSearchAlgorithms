@@ -39,6 +39,7 @@ class CheckersTreeBuilder(TreeBuilderABC):
         self.mt_C = 1.4
         self.max_depth = 0
         self.game = game
+        self.print_info = False
         # self.game_board = self.game.game_board
 
     def build_monte_carlo_tree(self, time_limit):
@@ -59,7 +60,8 @@ class CheckersTreeBuilder(TreeBuilderABC):
             print("No possible moves, something went wrong")
             return
         if len(possible_moves) == 1:
-            print("Only one move possible, returning it")
+            if self.print_info:
+                print("Only one move possible, returning it")
             return possible_moves[0]
 
         games = 0
@@ -70,9 +72,10 @@ class CheckersTreeBuilder(TreeBuilderABC):
         while games <= 100:
             self._run_monte_carlo_simulation(actual_board, player, player)
             games += 1
-            if games % 10 == 0:
+            if games % 10 == 0 and self.print_info:
                 print(games)
-        print("Number of games: {}".format(games))
+        if self.print_info:
+            print("Number of games: {}".format(games))
 
         moves_tuples = [(move_cords, self.game.game_board.make_move(
             player_id=player,
@@ -86,16 +89,17 @@ class CheckersTreeBuilder(TreeBuilderABC):
              move) for move, act_board in moves_tuples
         )
 
-        for x in sorted(
-                ((100 * self.mt_wins.get((player, S), 0) /
-                  self.mt_plays.get((player, S), 1),
-                  self.mt_wins.get((player, S), 0),
-                  self.mt_plays.get((player, S), 0), p)
-                 for p, S in moves_tuples),
-                reverse=True
-        ):
-            print("{3}: {0:.2f}% ({1} /{2})".format(*x))
-        print("Maximum depth searched:", self.max_depth)
+        if self.print_info:
+            for x in sorted(
+                    ((100 * self.mt_wins.get((player, S), 0) /
+                      self.mt_plays.get((player, S), 1),
+                      self.mt_wins.get((player, S), 0),
+                      self.mt_plays.get((player, S), 0), p)
+                     for p, S in moves_tuples),
+                    reverse=True
+            ):
+                print("{3}: {0:.2f}% ({1} /{2})".format(*x))
+            print("Maximum depth searched:", self.max_depth)
 
         return move
 

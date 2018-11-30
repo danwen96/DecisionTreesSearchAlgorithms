@@ -268,7 +268,7 @@ class GameBoard(GameBoardABC):
 
     def __change_checker_to_king_if_can(self, end_x_ind, end_y_ind, board=None):
         """
-        Transform checker to king when the condtitions are set(getting to the
+        Transform checker to king when the conditions are set(getting to the
         end of the board)
         :param end_x_ind: Index x of checker that is going to be checked after
         making move

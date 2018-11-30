@@ -15,8 +15,6 @@ class MinimaxSearchAlgorithms(SearchAlgorithmsABC):
 
     def __init__(self, depth=5):
         self.actual_search_method = self._tic_tac_toe_search_algorithm
-        # self.actual_search_method = self._tic_tac_toe_search_algorithm
-        # self.depth = depth
 
     def search_tree(self, root_node):
         """

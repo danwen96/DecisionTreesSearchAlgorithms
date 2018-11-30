@@ -1,19 +1,44 @@
 """Module responsible for building of the decision trees of tic tac toe game"""
 import datetime
+from copy import deepcopy
 from math import log, sqrt
 from enum import Enum
 from random import choice
 
-from anytree import Node, RenderTree
-from anytree.exporter import DotExporter
+import anytree
+from anytree import Node
 
+from decision_games_with_ai.games.tic_tac_toe.game import Game
 from decision_games_with_ai.games.tic_tac_toe.game_implementation.game_board import GameBoard
 from decision_games_with_ai.games.tree_builder_abc import TreeBuilderABC
 
-import anytree
-import easyAI
+from decision_games_with_ai.games.utils.global_enums import GameStates
 
-from decision_games_with_ai.games.utils.global_enums import GameStates, SearchMethods
+from mcts import mcts
+
+class AdaptationStateClass:
+
+    def __init___(self, game_class):
+        self.game = game_class
+
+    def getPossibleActions(self):
+        return self.game.game_board.get_possible_moves(self.game.game_board.board_arrays)
+
+    def takeAction(self, action):
+        newState = deepcopy(self)
+        newState.game.make_move(action)
+        return newState
+
+    def isTerminal(self):
+        return self.game.get_game_state() != GameStates.ONGOING
+
+    def getReward(self):
+        act_game_state = self.game.get_game_state()
+
+        if act_game_state == GameStates.PLAYER2WIN:
+            return 100
+
+        return False
 
 
 class TicTacToeTreeBuilder(TreeBuilderABC):
@@ -44,6 +69,15 @@ class TicTacToeTreeBuilder(TreeBuilderABC):
         # self.game_board = self.game.game_board
 
     def build_monte_carlo_tree(self, time_limit):
+        game_copy = deepcopy(self.game)
+        initialState = AdaptationStateClass(game_copy)
+        mcts = mcts(time_limit=1000)
+        action = mcts.search(initialState)
+        print(action)
+
+        return action
+
+    def __build_monte_carlo_tree(self, time_limit):
         """
         Builds tree using monte carlo method
         :param time_limit: Time limit in seconds after which this method will
@@ -97,15 +131,14 @@ class TicTacToeTreeBuilder(TreeBuilderABC):
             ):
                 print("{3}: {0:.2f}% ({1} /{2})".format(*x))
             print("Maximum depth searched:", self.max_depth)
-
         return move
 
     def _run_monte_carlo_simulation(self, actual_board, actual_player, player):
         """
-
-        :param actual_board:
-        :param actual_player:
-        :param player:
+        Runs one simulation of game till the terminal condition
+        :param actual_board: Actual board of the game
+        :param actual_player: Actual player that is going to make move
+        :param player: Player that wants to have the best score
         :return:
         """
         visited_states = set()
@@ -246,7 +279,6 @@ class TicTacToeTreeBuilder(TreeBuilderABC):
         Method that will use nemumax search with alpha beta prunning
         :return:
         """
-        # TODO add nemumax method
         raise NotImplementedError("Not done yet")
 
     def _static_evaluation_value(self, actual_board, player):
@@ -263,6 +295,12 @@ class TicTacToeTreeBuilder(TreeBuilderABC):
 
 if __name__ == '__main__':
     pass
+    # game = Game(starting_player=GameBoard.BoardSigns.PLAYER1)
+    # game.start_game()
+    # initialState = game
+    # mcts = mcts(timeLimit=1000)
+    # action = mcts.search(initialState=initialState)
+
     # print("Anytree test")
     #
     # udo = Node("Udo")
