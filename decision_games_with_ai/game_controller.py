@@ -52,7 +52,7 @@ class GameController:
             name="Computer player mini max",
             tree_builder=TicTacToeTreeBuilder(self.game),
             search_algorithm=MinimaxSearchAlgorithms(depth=5),
-            search_method_enum=SearchMethods.MINIMAX,
+            search_method_enum=SearchMethods.ALPHABETA,
             search_depth=9
         )
 
@@ -105,7 +105,7 @@ class GameController:
             search_method_enum=SearchMethods.MONTECARLO,
             search_depth=3
         )
-
+        self.player2.tree_builder.print_info = True
         self.control_interface = decision_games_with_ai.user_interfaces.tui. \
             tic_tac_toe_console_interface.TicTacToeConsoleInterface(self.game)
         self.control_interface.play(self.player1, self.player2)
@@ -163,8 +163,8 @@ if __name__ == '__main__':
     game_controller = GameController()
     # game_controller.play_tic_tac_toe_two_console_players()
     # game_controller.play_checkers_two_console_players()
-    # game_controller.play_tic_tac_toe_with_computer()
+    game_controller.play_tic_tac_toe_with_computer()
     # game_controller.play_checkers_with_computer()
-    game_controller.play_tic_tac_toe_with_computer_monte_carlo()
+    # game_controller.play_tic_tac_toe_with_computer_monte_carlo()
     # game_controller.play_checkers_with_computer_monte_carlo()
     # game_controller.play_multiple_games_between_computers_monte_carlo()

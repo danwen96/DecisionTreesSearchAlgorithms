@@ -15,3 +15,4 @@ class SearchMethods(Enum):
     RANDOM = 0
     MINIMAX = 1
     MONTECARLO = 2
+    ALPHABETA = 3

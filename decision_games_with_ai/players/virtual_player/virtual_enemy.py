@@ -29,13 +29,14 @@ class VirtualEnemy(PlayerABC):
         self.time_limit = time_limit
         self.get_builder_output = {
             SearchMethods.MINIMAX: self._get_minimax_move,
-            SearchMethods.MONTECARLO: self._get_monte_carlo_move
+            SearchMethods.MONTECARLO: self._get_monte_carlo_move,
+            SearchMethods.ALPHABETA: self._get_alpha_beta_move
         }[search_method_enum]
 
     def get_player_move(self):
         """
         Gets virtual enemy move
-        :return:
+        :return: Move in uct format
         """
         return self.get_builder_output()
         # return self._get_monte_carlo_move()
@@ -43,7 +44,7 @@ class VirtualEnemy(PlayerABC):
     def _get_minimax_move(self):
         """
         Gets minimax enemy move
-        :return:
+        :return: Move in uct format
         """
         root_node = self._get_tree()
         return self.search_algorithm.search_tree(root_node)
@@ -56,9 +57,17 @@ class VirtualEnemy(PlayerABC):
         return self.tree_builder.build_minimax_tree(self.search_depth)
 
     def _get_monte_carlo_move(self):
-        # TODO
         """
-        temporary method
-        :return:
+        Direct getting of the move for montecarlo
+        :return: Move in uct format
         """
         return self.tree_builder.build_monte_carlo_tree(self.time_limit)
+
+    def _get_alpha_beta_move(self):
+        """
+        Direct getting of the move for alpha beta algorithm
+        :return: Move in uct format
+        """
+        root_node = self.tree_builder.build_alphabeta_tree(self.search_depth)
+        # return self.tree_builder.build_alphabeta_tree(self.search_depth)
+        return self.search_algorithm.search_tree(root_node)

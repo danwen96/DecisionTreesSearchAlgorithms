@@ -6,7 +6,8 @@ from enum import Enum
 from random import choice
 
 import anytree
-from anytree import Node
+from anytree import Node, RenderTree
+from anytree.exporter import DotExporter
 
 from decision_games_with_ai.games.tic_tac_toe.game import Game
 from decision_games_with_ai.games.tic_tac_toe.game_implementation.game_board import GameBoard
@@ -14,31 +15,8 @@ from decision_games_with_ai.games.tree_builder_abc import TreeBuilderABC
 
 from decision_games_with_ai.games.utils.global_enums import GameStates
 
-from mcts import mcts
-
-class AdaptationStateClass:
-
-    def __init___(self, game_class):
-        self.game = game_class
-
-    def getPossibleActions(self):
-        return self.game.game_board.get_possible_moves(self.game.game_board.board_arrays)
-
-    def takeAction(self, action):
-        newState = deepcopy(self)
-        newState.game.make_move(action)
-        return newState
-
-    def isTerminal(self):
-        return self.game.get_game_state() != GameStates.ONGOING
-
-    def getReward(self):
-        act_game_state = self.game.get_game_state()
-
-        if act_game_state == GameStates.PLAYER2WIN:
-            return 100
-
-        return False
+MAX_VAL = 1000
+MIN_VAL = -1000
 
 
 class TicTacToeTreeBuilder(TreeBuilderABC):
@@ -66,18 +44,8 @@ class TicTacToeTreeBuilder(TreeBuilderABC):
         self.mt_C = 3
         self.max_depth = 0
         self.print_info = False
-        # self.game_board = self.game.game_board
 
     def build_monte_carlo_tree(self, time_limit):
-        game_copy = deepcopy(self.game)
-        initialState = AdaptationStateClass(game_copy)
-        mcts = mcts(time_limit=1000)
-        action = mcts.search(initialState)
-        print(action)
-
-        return action
-
-    def __build_monte_carlo_tree(self, time_limit):
         """
         Builds tree using monte carlo method
         :param time_limit: Time limit in seconds after which this method will
@@ -212,9 +180,7 @@ class TicTacToeTreeBuilder(TreeBuilderABC):
             move=None
         )
 
-        # print(RenderTree(main_root))
         return main_root.children[0]
-        # input("pause")
 
     def _create_one_tree_layer_minimax(self, depth, actual_player, player, parent_node,
                                        actual_board, move):
@@ -274,12 +240,137 @@ class TicTacToeTreeBuilder(TreeBuilderABC):
                 move=pos_move
             )
 
-    def nemumax_tree(self):
+    def build_alphabeta_tree(self, depth):
         """
-        Method that will use nemumax search with alpha beta prunning
-        :return:
+        Builds alpha beta tree move possibilities
+        :param depth: Depth at which the algorithms will stop building tree
+        :return: Built tree
         """
-        raise NotImplementedError("Not done yet")
+
+        main_root = anytree.Node(None)
+
+        move_node = self._create_one_tree_layer_alphabeta(
+            depth=30,
+            player=self.game.current_players_turn,
+            actual_player=self.game.current_players_turn,
+            parent_node=main_root,
+            actual_board=self.game.game_board.get_board_copy(),
+            move=None,
+            alpha=Node(MIN_VAL),
+            beta=Node(MAX_VAL)
+        )
+        # print(RenderTree(main_root))
+        # print(move_node)
+        # return move_node.move
+
+        return main_root.children[0]
+
+    def _create_one_tree_layer_alphabeta(self, depth, actual_player, player, parent_node,
+                                         actual_board, move, alpha, beta):
+        """
+        Creates one tree layer for one move of a particular player, then finds
+        self recursively value of its nodes
+        :param depth: Depth at which this particular branch can search further
+        :param actual_player: Enum signalising if the tree should find minimum
+        moves, or maximum
+        :param player: The player for which the move is discovered
+        :param parent_node: Node that is the parent of current node
+        :param actual_board: Board arrays with actually estimated board
+        simulation
+        :param move: Last move in tuple
+        :return: Node containing possible moves
+        """
+        if depth == 0:
+            return Node(self._static_evaluation_value(actual_board=actual_board,
+                                                      player=player),
+                        parent=parent_node, move=move)
+
+        game_state = self.game.game_board.check_game_state(actual_board)
+
+        if player == GameBoard.BoardSigns.PLAYER1:
+            desired_game_state = GameStates.PLAYER1WIN
+            undesired_game_state = GameStates.PLAYER2WIN
+        elif player == GameBoard.BoardSigns.PLAYER2:
+            desired_game_state = GameStates.PLAYER2WIN
+            undesired_game_state = GameStates.PLAYER1WIN
+        else:
+            raise TypeError("Not predicted player state")
+
+        if game_state == GameStates.DRAW:
+            return Node(0, parent=parent_node, move=move)
+        elif game_state == desired_game_state:
+            return Node(1000, parent=parent_node, move=move)
+        elif game_state == undesired_game_state:
+            return Node(-1000, parent=parent_node, move=move)
+
+        if actual_player == player:
+            layer_factor = self.PlayerFactor.MAX
+        else:
+            layer_factor = self.PlayerFactor.MIN
+
+        possible_moves = self.game.game_board.get_possible_moves(actual_board)
+
+        nodes_le_lambda = lambda x, y: x.name <= y.name
+
+        actual_node = Node(None, parent=parent_node, move=move)
+        if layer_factor == self.PlayerFactor.MAX:
+            best = Node(MIN_VAL)
+            for pos_move in possible_moves:
+                board_copy = self.game.game_board.get_board_copy(actual_board)
+                board_copy = self.game.game_board.make_move(
+                    player_id=actual_player,
+                    move_coords=pos_move,
+                    board=board_copy
+                )
+                val_returned = self._create_one_tree_layer_alphabeta(
+                    depth=depth - 1,
+                    actual_player=self.next_player_dict[actual_player],
+                    player=player,
+                    parent_node=actual_node,
+                    actual_board=board_copy,
+                    move=pos_move,
+                    alpha=alpha,
+                    beta=beta
+                )
+                try:
+                    best = max([val_returned, best], key=lambda x: x.name)
+                    alpha = max([val_returned, alpha], key=lambda x: x.name)
+                    if nodes_le_lambda(beta, alpha):
+                        break
+                except TypeError:
+                    print("Val returned - {}\n Best value - {}\n alpha - {}\nbeta - {}\n\n".format(
+                        val_returned, best, alpha, beta))
+                    raise
+        else:
+            best = Node(MAX_VAL)
+            for pos_move in possible_moves:
+                board_copy = self.game.game_board.get_board_copy(actual_board)
+                board_copy = self.game.game_board.make_move(
+                    player_id=actual_player,
+                    move_coords=pos_move,
+                    board=board_copy
+                )
+                val_returned = self._create_one_tree_layer_alphabeta(
+                    depth=depth - 1,
+                    actual_player=self.next_player_dict[actual_player],
+                    player=player,
+                    parent_node=actual_node,
+                    actual_board=board_copy,
+                    move=pos_move,
+                    alpha=alpha,
+                    beta=beta
+                )
+                try:
+                    best = min([val_returned, best], key=lambda x: x.name)
+                    beta = min([val_returned, beta], key=lambda x: x.name)
+                    if nodes_le_lambda(beta, alpha):
+                        break
+                except TypeError:
+                    print("Val returned - {}\n Best value - {}\n beta - {}\nalpha - {}\n\n".format(
+                        val_returned, best, beta, alpha))
+                    raise
+
+        return best
 
     def _static_evaluation_value(self, actual_board, player):
         """
@@ -295,11 +386,6 @@ class TicTacToeTreeBuilder(TreeBuilderABC):
 
 if __name__ == '__main__':
     pass
-    # game = Game(starting_player=GameBoard.BoardSigns.PLAYER1)
-    # game.start_game()
-    # initialState = game
-    # mcts = mcts(timeLimit=1000)
-    # action = mcts.search(initialState=initialState)
 
     # print("Anytree test")
     #
@@ -316,7 +402,7 @@ if __name__ == '__main__':
     #
     # #DotExporter(udo).to_picture("udo.png")
     # DotExporter(udo).to_dotfile("udo.dot")
-
+    #
     # from anytree import Node
     # root = Node("root")
     # s0 = Node("sub0", parent=root)
@@ -329,7 +415,7 @@ if __name__ == '__main__':
     # s1ca = Node("sub1Ca", parent=s1c)
     #
     # DotExporter(root).to_dotfile("tree.dot")
-
+    #
     # from graphviz import Digraph
     #
     # dot = Digraph(comment='The Round Table')
