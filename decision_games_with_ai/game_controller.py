@@ -83,8 +83,8 @@ class GameController:
             name="Computer player minimax",
             tree_builder=CheckersTreeBuilder(self.game),
             search_algorithm=MinimaxSearchAlgorithms(),
-            search_method_enum=SearchMethods.MINIMAX,
-            search_depth=9
+            search_method_enum=SearchMethods.ALPHABETA,
+            search_depth=4
         )
         self.control_interface = decision_games_with_ai.user_interfaces.tui. \
             checkers_console_interface.CheckersConsoleInterface(self.game)
@@ -163,8 +163,8 @@ if __name__ == '__main__':
     game_controller = GameController()
     # game_controller.play_tic_tac_toe_two_console_players()
     # game_controller.play_checkers_two_console_players()
-    game_controller.play_tic_tac_toe_with_computer()
-    # game_controller.play_checkers_with_computer()
+    # game_controller.play_tic_tac_toe_with_computer()
+    game_controller.play_checkers_with_computer()
     # game_controller.play_tic_tac_toe_with_computer_monte_carlo()
     # game_controller.play_checkers_with_computer_monte_carlo()
     # game_controller.play_multiple_games_between_computers_monte_carlo()

@@ -14,6 +14,9 @@ import anytree
 
 from decision_games_with_ai.games.utils.global_enums import GameStates, SearchMethods
 
+MIN_VAL = -100000
+MAX_VAL = 100000
+
 
 class CheckersTreeBuilder(TreeBuilderABC):
     """Class providing tree builders method for tic tac toe game"""
@@ -30,6 +33,29 @@ class CheckersTreeBuilder(TreeBuilderABC):
     player_desired_game_state = {
         GameBoard.Players.PLAYER1: GameStates.PLAYER1WIN,
         GameBoard.Players.PLAYER2: GameStates.PLAYER2WIN
+    }
+
+    players_pawns_tuple = (
+        GameBoard.BoardSigns.PLAYER1_KING.value,
+        GameBoard.BoardSigns.PLAYER1_CHECKER.value,
+        GameBoard.BoardSigns.PLAYER2_KING.value,
+        GameBoard.BoardSigns.PLAYER2_CHECKER.value
+    )
+
+    pawns_values = {
+        GameBoard.Players.PLAYER1: {
+            GameBoard.BoardSigns.PLAYER1_KING.value: 8,
+            GameBoard.BoardSigns.PLAYER1_CHECKER.value: 1,
+            GameBoard.BoardSigns.PLAYER2_KING.value: -8,
+            GameBoard.BoardSigns.PLAYER2_CHECKER.value: -1
+        },
+        GameBoard.Players.PLAYER2: {
+            GameBoard.BoardSigns.PLAYER1_KING.value: -8,
+            GameBoard.BoardSigns.PLAYER1_CHECKER.value: -1,
+            GameBoard.BoardSigns.PLAYER2_KING.value: 8,
+            GameBoard.BoardSigns.PLAYER2_CHECKER.value: 1
+        }
+
     }
 
     def __init__(self, game):
@@ -129,11 +155,6 @@ class CheckersTreeBuilder(TreeBuilderABC):
                 play, brd = choice(moves_boards)
 
             board_copy = brd
-            #     self.game.game_board.make_move(
-            #     player_id=actual_player,
-            #     move_coords=play,
-            #     board=board_copy
-            # )
 
             if expand and (actual_player, board_copy) not in self.mt_plays:
                 expand = False
@@ -215,9 +236,9 @@ class CheckersTreeBuilder(TreeBuilderABC):
         if game_state == GameStates.DRAW:
             return Node(0, parent=parent_node, move=move)
         elif game_state == desired_game_state:
-            return Node(1000, parent=parent_node, move=move)
+            return Node(MAX_VAL, parent=parent_node, move=move)
         elif game_state == undesired_game_state:
-            return Node(-1000, parent=parent_node, move=move)
+            return Node(MIN_VAL, parent=parent_node, move=move)
 
         possible_moves = self.game.game_board.get_possible_moves(actual_player,
                                                                  actual_board)
@@ -240,6 +261,140 @@ class CheckersTreeBuilder(TreeBuilderABC):
                 move=pos_move
             )
 
+    def build_alphabeta_tree(self, depth):
+        """
+        Builds alpha beta tree move possibilities
+        :param depth: Depth at which the algorithms will stop building tree
+        :return: Built tree
+        """
+
+        main_root = anytree.Node(None)
+
+        move_node = self._create_one_tree_layer_alphabeta(
+            depth=depth,
+            player=self.game.current_players_turn,
+            actual_player=self.game.current_players_turn,
+            parent_node=main_root,
+            actual_board=self.game.game_board.get_board_copy(),
+            move=None,
+            alpha=Node(MIN_VAL),
+            beta=Node(MAX_VAL)
+        )
+        # print(RenderTree(main_root))
+        # print(move_node)
+        # return move_node.move
+        print("Alpha beta was called")
+        return main_root.children[0]
+
+    def _create_one_tree_layer_alphabeta(self, depth, actual_player, player, parent_node,
+                                         actual_board, move, alpha, beta):
+        """
+        Creates one tree layer for one move of a particular player, then finds
+        self recursively value of its nodes
+        :param depth: Depth at which this particular branch can search further
+        :param actual_player: Enum signalising if the tree should find minimum
+        moves, or maximum
+        :param player: The player for which the move is discovered
+        :param parent_node: Node that is the parent of current node
+        :param actual_board: Board arrays with actually estimated board
+        simulation
+        :param move: Last move in tuple
+        :return: Node containing possible moves
+        """
+        if depth == 0:
+            return Node(self._static_evaluation_value(actual_board=actual_board,
+                                                      player=player),
+                        parent=parent_node, move=move)
+
+        game_state = self.game.game_board.check_game_state(actual_player,
+                                                           actual_board)
+
+        if player == GameBoard.Players.PLAYER1:
+            desired_game_state = GameStates.PLAYER1WIN
+            undesired_game_state = GameStates.PLAYER2WIN
+        elif player == GameBoard.Players.PLAYER2:
+            desired_game_state = GameStates.PLAYER2WIN
+            undesired_game_state = GameStates.PLAYER1WIN
+        else:
+            raise TypeError("Not predicted player state")
+
+        if game_state == GameStates.DRAW:
+            return Node(0, parent=parent_node, move=move)
+        elif game_state == desired_game_state:
+            return Node(MAX_VAL, parent=parent_node, move=move)
+        elif game_state == undesired_game_state:
+            return Node(MIN_VAL, parent=parent_node, move=move)
+
+        if actual_player == player:
+            layer_factor = self.PlayerFactor.MAX
+        else:
+            layer_factor = self.PlayerFactor.MIN
+
+        possible_moves = self.game.game_board.get_possible_moves(actual_player,
+                                                                 actual_board)
+
+        nodes_le_lambda = lambda x, y: x.name <= y.name
+
+        actual_node = Node(None, parent=parent_node, move=move)
+        if layer_factor == self.PlayerFactor.MAX:
+            best = Node(MIN_VAL)
+            for pos_move in possible_moves:
+                board_copy = self.game.game_board.get_board_copy(actual_board)
+                board_copy = self.game.game_board.make_move(
+                    player_id=actual_player,
+                    move_coords=pos_move,
+                    board=board_copy
+                )
+                val_returned = self._create_one_tree_layer_alphabeta(
+                    depth=depth - 1,
+                    actual_player=self.next_player_dict[actual_player],
+                    player=player,
+                    parent_node=actual_node,
+                    actual_board=board_copy,
+                    move=pos_move,
+                    alpha=alpha,
+                    beta=beta
+                )
+                try:
+                    best = max([val_returned, best], key=lambda x: x.name)
+                    alpha = max([val_returned, alpha], key=lambda x: x.name)
+                    if nodes_le_lambda(beta, alpha):
+                        break
+                except TypeError:
+                    print("Val returned - {}\n Best value - {}\n alpha - {}\nbeta - {}\n\n".format(
+                        val_returned, best, alpha, beta))
+                    raise
+        else:
+            best = Node(MAX_VAL)
+            for pos_move in possible_moves:
+                board_copy = self.game.game_board.get_board_copy(actual_board)
+                board_copy = self.game.game_board.make_move(
+                    player_id=actual_player,
+                    move_coords=pos_move,
+                    board=board_copy
+                )
+                val_returned = self._create_one_tree_layer_alphabeta(
+                    depth=depth - 1,
+                    actual_player=self.next_player_dict[actual_player],
+                    player=player,
+                    parent_node=actual_node,
+                    actual_board=board_copy,
+                    move=pos_move,
+                    alpha=alpha,
+                    beta=beta
+                )
+                try:
+                    best = min([val_returned, best], key=lambda x: x.name)
+                    beta = min([val_returned, beta], key=lambda x: x.name)
+                    if nodes_le_lambda(beta, alpha):
+                        break
+                except TypeError:
+                    print("Val returned - {}\n Best value - {}\n beta - {}\nalpha - {}\n\n".format(
+                        val_returned, best, beta, alpha))
+                    raise
+
+        return best
+
     def _static_evaluation_value(self, actual_board, player):
         """
         Function for static evaluation of the board for minimax algorithm
@@ -248,8 +403,17 @@ class CheckersTreeBuilder(TreeBuilderABC):
         returned
         :return: Value of evaluated board
         """
-        # Returns always equal board for test purpose
-        return 0
+        player_pawns = GameBoard.allowed_pawns[player]
+
+        total_value = 0
+
+        for par_line in actual_board:
+            for el in par_line:
+                if el in CheckersTreeBuilder.players_pawns_tuple:
+                        total_value += \
+                            CheckersTreeBuilder.pawns_values[player][el]
+
+        return total_value
 
 
 if __name__ == '__main__':
