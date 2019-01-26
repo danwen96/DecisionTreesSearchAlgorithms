@@ -17,8 +17,8 @@ class GameBoard(GameBoardABC):
         EMPTY = '-'
 
     def __init__(self):
-        self.board_size = 3
-        self.winning_combination = 3
+        self.board_size = 9
+        self.winning_combination = 5
         self._initialize_board()
 
     def _initialize_board(self):

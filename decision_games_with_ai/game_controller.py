@@ -51,9 +51,9 @@ class GameController:
         self.player2 = VirtualEnemy(
             name="Computer player mini max",
             tree_builder=TicTacToeTreeBuilder(self.game),
-            search_algorithm=MinimaxSearchAlgorithms(depth=5),
+            search_algorithm=MinimaxSearchAlgorithms(),
             search_method_enum=SearchMethods.ALPHABETA,
-            search_depth=9
+            search_depth=4
         )
 
         self.control_interface = decision_games_with_ai.user_interfaces.tui. \
@@ -82,9 +82,9 @@ class GameController:
         self.player2 = VirtualEnemy(
             name="Computer player minimax",
             tree_builder=CheckersTreeBuilder(self.game),
-            search_algorithm=MinimaxSearchAlgorithms(depth=3),
+            search_algorithm=MinimaxSearchAlgorithms(),
             search_method_enum=SearchMethods.MINIMAX,
-            search_depth=3
+            search_depth=9
         )
         self.control_interface = decision_games_with_ai.user_interfaces.tui. \
             checkers_console_interface.CheckersConsoleInterface(self.game)

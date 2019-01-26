@@ -14,9 +14,10 @@ from decision_games_with_ai.games.tic_tac_toe.game_implementation.game_board imp
 from decision_games_with_ai.games.tree_builder_abc import TreeBuilderABC
 
 from decision_games_with_ai.games.utils.global_enums import GameStates
+from decision_games_with_ai.games.utils.iter_functions import previous_and_next
 
-MAX_VAL = 1000
-MIN_VAL = -1000
+MAX_VAL = 100000
+MIN_VAL = -100000
 
 
 class TicTacToeTreeBuilder(TreeBuilderABC):
@@ -36,7 +37,18 @@ class TicTacToeTreeBuilder(TreeBuilderABC):
         GameBoard.BoardSigns.PLAYER2: GameStates.PLAYER2WIN
     }
 
+    players_pawns_values = {
+        GameBoard.BoardSigns.PLAYER1: GameBoard.BoardSigns.PLAYER1.value,
+        GameBoard.BoardSigns.PLAYER2: GameBoard.BoardSigns.PLAYER2.value
+    }
+
+    players_pawns = (
+        GameBoard.BoardSigns.PLAYER1.value,
+        GameBoard.BoardSigns.PLAYER2.value
+    )
+
     def __init__(self, game):
+        # monte carlo variables
         self.game = game
         self.max_moves_mt = 100
         self.mt_wins = {}
@@ -44,6 +56,10 @@ class TicTacToeTreeBuilder(TreeBuilderABC):
         self.mt_C = 3
         self.max_depth = 0
         self.print_info = False
+
+        # minimax variables
+        self.value_of_neigh_signs = 5
+        self.value_of_near_empty_field = 1
 
     def build_monte_carlo_tree(self, time_limit):
         """
@@ -216,9 +232,9 @@ class TicTacToeTreeBuilder(TreeBuilderABC):
         if game_state == GameStates.DRAW:
             return Node(0, parent=parent_node, move=move)
         elif game_state == desired_game_state:
-            return Node(1000, parent=parent_node, move=move)
+            return Node(MAX_VAL-depth, parent=parent_node, move=move)
         elif game_state == undesired_game_state:
-            return Node(-1000, parent=parent_node, move=move)
+            return Node(MIN_VAL, parent=parent_node, move=move)
 
         possible_moves = self.game.game_board.get_possible_moves(actual_board)
 
@@ -250,7 +266,7 @@ class TicTacToeTreeBuilder(TreeBuilderABC):
         main_root = anytree.Node(None)
 
         move_node = self._create_one_tree_layer_alphabeta(
-            depth=30,
+            depth=depth,
             player=self.game.current_players_turn,
             actual_player=self.game.current_players_turn,
             parent_node=main_root,
@@ -299,9 +315,9 @@ class TicTacToeTreeBuilder(TreeBuilderABC):
         if game_state == GameStates.DRAW:
             return Node(0, parent=parent_node, move=move)
         elif game_state == desired_game_state:
-            return Node(1000, parent=parent_node, move=move)
+            return Node(MAX_VAL, parent=parent_node, move=move)
         elif game_state == undesired_game_state:
-            return Node(-1000, parent=parent_node, move=move)
+            return Node(MIN_VAL, parent=parent_node, move=move)
 
         if actual_player == player:
             layer_factor = self.PlayerFactor.MAX
@@ -376,17 +392,42 @@ class TicTacToeTreeBuilder(TreeBuilderABC):
         """
         Function for static evaluation of the board for minimax algorithm
         :param actual_board: Board that will get evaluated
-        :param player: Player for which evaluated score of the bard will be
+        :param player: Player for which evaluated score of the board will be
         returned
         :return: Value of evaluated board
         """
         # Returns always equal board for test purpose
-        return 0
+        total_value = 0
+
+        player_pawn = TicTacToeTreeBuilder.players_pawns_values[player]
+        empty_field_val = GameBoard.BoardSigns.EMPTY.value
+
+        for prev_line, act_line, next_line in previous_and_next(actual_board):
+            if prev_line is None:
+                prev_line = [None] * len(act_line)
+            if next_line is None:
+                next_line = [None] * len(act_line)
+            # print(" prev_line - {},  act_line - {},  next_line - {}".format(
+            #     prev_line, act_line, next_line))
+
+            for up_els, cen_els, dn_els in zip(previous_and_next(prev_line),
+                                               previous_and_next(act_line),
+                                               previous_and_next(next_line)):
+                # print("{}    {}    {}".format(up_els, cen_els, dn_els))
+                if cen_els[1] == player_pawn:
+                    total_value += up_els.count(player_pawn)*self.value_of_neigh_signs
+                    total_value += dn_els.count(player_pawn)*self.value_of_neigh_signs
+                    total_value += (cen_els.count(player_pawn)-1)*self.value_of_neigh_signs
+
+                    total_value += up_els.count(empty_field_val)*self.value_of_near_empty_field
+                    total_value += dn_els.count(empty_field_val)*self.value_of_near_empty_field
+                    total_value += cen_els.count(empty_field_val)*self.value_of_near_empty_field
+
+        return total_value
 
 
 if __name__ == '__main__':
     pass
-
     # print("Anytree test")
     #
     # udo = Node("Udo")
