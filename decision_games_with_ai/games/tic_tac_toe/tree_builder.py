@@ -61,10 +61,10 @@ class TicTacToeTreeBuilder(TreeBuilderABC):
         self.value_of_neigh_signs = 5
         self.value_of_near_empty_field = 1
 
-    def build_monte_carlo_tree(self, time_limit):
+    def build_monte_carlo_tree(self, num_of_sim):
         """
         Builds tree using monte carlo method
-        :param time_limit: Time limit in seconds after which this method will
+        :param num_of_sim: Time limit in seconds after which this method will
         return built tree
         :return:
         """

@@ -68,10 +68,10 @@ class CheckersTreeBuilder(TreeBuilderABC):
         self.print_info = False
         # self.game_board = self.game.game_board
 
-    def build_monte_carlo_tree(self, time_limit):
+    def build_monte_carlo_tree(self, num_of_sim):
         """
         Builds tree using monte carlo method
-        :param time_limit: Time limit in seconds after which this method will
+        :param num_of_sim: Time limit in seconds after which this method will
         return built tree
         :return:
         """
@@ -95,7 +95,7 @@ class CheckersTreeBuilder(TreeBuilderABC):
         # time_for_move = datetime.timedelta(seconds=time_limit)
         # start_time = datetime.datetime.utcnow()
         # while datetime.datetime.utcnow() - start_time < time_for_move:
-        while games <= 100:
+        while games <= num_of_sim:
             self._run_monte_carlo_simulation(actual_board, player, player)
             games += 1
             if games % 10 == 0 and self.print_info:
@@ -283,7 +283,7 @@ class CheckersTreeBuilder(TreeBuilderABC):
         # print(RenderTree(main_root))
         # print(move_node)
         # return move_node.move
-        print("Alpha beta was called")
+        # print("Alpha beta was called")
         return main_root.children[0]
 
     def _create_one_tree_layer_alphabeta(self, depth, actual_player, player, parent_node,

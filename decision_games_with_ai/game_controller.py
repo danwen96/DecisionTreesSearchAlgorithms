@@ -3,6 +3,7 @@ import decision_games_with_ai.games.checkers.game
 
 import decision_games_with_ai.user_interfaces.tui.tic_tac_toe_console_interface
 import decision_games_with_ai.user_interfaces.tpai.tic_tac_toe_console_arena_interface
+import decision_games_with_ai.user_interfaces.tpai.checkers_console_arena_interface
 import decision_games_with_ai.user_interfaces.tui.checkers_console_interface
 from decision_games_with_ai.games.checkers.tree_builder import CheckersTreeBuilder
 from decision_games_with_ai.games.tic_tac_toe.tree_builder import TicTacToeTreeBuilder
@@ -103,7 +104,7 @@ class GameController:
             tree_builder=TicTacToeTreeBuilder(self.game),
             search_algorithm=MonteCarloSearchAlghoritm(),
             search_method_enum=SearchMethods.MONTECARLO,
-            search_depth=3
+            num_of_sim=100
         )
         self.player2.tree_builder.print_info = True
         self.control_interface = decision_games_with_ai.user_interfaces.tui. \
@@ -123,14 +124,14 @@ class GameController:
             tree_builder=CheckersTreeBuilder(self.game),
             search_algorithm=MonteCarloSearchAlghoritm(),
             search_method_enum=SearchMethods.MONTECARLO,
-            search_depth=3
+            num_of_sim=100
         )
 
         self.control_interface = decision_games_with_ai.user_interfaces.tui. \
             checkers_console_interface.CheckersConsoleInterface(self.game)
         self.control_interface.play(self.player1, self.player2)
 
-    def play_multiple_games_between_computers_monte_carlo(self):
+    def play_multiple_games_between_computers_tic_tac_toe(self):
         """
         Initializes proper objects for arena play between virtual players
         :return:
@@ -141,15 +142,15 @@ class GameController:
             name="Virtual player 1",
             tree_builder=TicTacToeTreeBuilder(self.game),
             search_algorithm=MinimaxSearchAlgorithms(),
-            search_method_enum=SearchMethods.MINIMAX,
+            search_method_enum=SearchMethods.ALPHABETA,
             search_depth=3
         )
 
         self.player2 = VirtualEnemy(
             name="Virtual player 2",
             tree_builder=TicTacToeTreeBuilder(self.game),
-            search_algorithm=MonteCarloSearchAlghoritm(),
-            search_method_enum=SearchMethods.MONTECARLO,
+            search_algorithm=MinimaxSearchAlgorithms(),
+            search_method_enum=SearchMethods.ALPHABETA,
             search_depth=3
         )
 
@@ -158,13 +159,42 @@ class GameController:
                 self.game, 1000, print_val_interval=10)
         self.control_interface.play(self.player1, self.player2)
 
+    def play_multiple_games_between_computers_checkers(self):
+        """
+        Initializes proper objects for arena play between virtual players
+        :return:
+        """
+        self.game = decision_games_with_ai.games.checkers.game.Game()
+
+        self.player1 = VirtualEnemy(
+            name="Virtual player 1",
+            tree_builder=CheckersTreeBuilder(self.game),
+            search_algorithm=MinimaxSearchAlgorithms(),
+            search_method_enum=SearchMethods.ALPHABETA,
+            search_depth=3
+        )
+
+        self.player2 = VirtualEnemy(
+            name="Virtual player 2",
+            tree_builder=CheckersTreeBuilder(self.game),
+            search_algorithm=MonteCarloSearchAlghoritm(),
+            search_method_enum=SearchMethods.MONTECARLO,
+            num_of_sim=100
+        )
+
+        self.control_interface = decision_games_with_ai.user_interfaces.tpai. \
+            checkers_console_arena_interface.CheckersConsoleArenaInterface(
+                self.game, 1000, print_val_interval=1)
+        self.control_interface.play(self.player1, self.player2)
+
 
 if __name__ == '__main__':
     game_controller = GameController()
     # game_controller.play_tic_tac_toe_two_console_players()
     # game_controller.play_checkers_two_console_players()
     # game_controller.play_tic_tac_toe_with_computer()
-    game_controller.play_checkers_with_computer()
+    # game_controller.play_checkers_with_computer()
     # game_controller.play_tic_tac_toe_with_computer_monte_carlo()
     # game_controller.play_checkers_with_computer_monte_carlo()
-    # game_controller.play_multiple_games_between_computers_monte_carlo()
+    # game_controller.play_multiple_games_between_computers_tic_tac_toe()
+    game_controller.play_multiple_games_between_computers_checkers()

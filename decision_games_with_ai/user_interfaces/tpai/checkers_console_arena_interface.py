@@ -1,14 +1,16 @@
-"""Module providing console arena interface for tic tac toe game, which is
+"""Module providing console arena interface for checkers game, which is
 designed for playing large number of games between players. Mostly used to
 determine which computer player works better.
 """
-from decision_games_with_ai.games.tic_tac_toe.game_implementation.game_board import GameBoard
+
+
+from decision_games_with_ai.games.checkers.game_implementation.game_board import GameBoard
 from decision_games_with_ai.games.utils.events_exceptions import InvalidMoveException
 from decision_games_with_ai.games.utils.global_enums import GameStates
 from decision_games_with_ai.user_interfaces.control_interface_abc import ControlInterfaceABC
 
 
-class TicTacToeConsoleArenaInterface(ControlInterfaceABC):
+class CheckersConsoleArenaInterface(ControlInterfaceABC):
 
     def __init__(self, game, number_of_games, print_val_interval=100):
         self.player1 = None
@@ -76,8 +78,8 @@ class TicTacToeConsoleArenaInterface(ControlInterfaceABC):
         :return:
         """
         enum_object_player_mapping = {
-            GameBoard.BoardSigns.PLAYER1: self.player1,
-            GameBoard.BoardSigns.PLAYER2: self.player2
+            GameBoard.Players.PLAYER1: self.player1,
+            GameBoard.Players.PLAYER2: self.player2
         }
 
         players_move_str = enum_object_player_mapping[

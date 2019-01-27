@@ -75,6 +75,7 @@ class Game(GameABC):
         if self.starting_player == GameBoard.Players.UNKNOWN:
             self.current_players_turn = random.choice([
                 GameBoard.Players.PLAYER1, GameBoard.Players.PLAYER2])
+            # print(self.current_players_turn)
         else:
             self.current_players_turn = self.starting_player
 

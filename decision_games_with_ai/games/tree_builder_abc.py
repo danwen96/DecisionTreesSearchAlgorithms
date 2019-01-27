@@ -15,11 +15,11 @@ class TreeBuilderABC(ABC):
         raise NotImplementedError("To override")
 
     @abstractmethod
-    def build_monte_carlo_tree(self, time_limit):
+    def build_monte_carlo_tree(self, num_of_sim):
         """
         Should build tree that will be searched through using the Monte Carlo
         tree search method
-        :param time_limit: Time limit after witch the tree will be returned
+        :param num_of_sim: Time limit after witch the tree will be returned
         :return: Tree structure ready to be searched through
         """
         raise NotImplementedError("To override")
